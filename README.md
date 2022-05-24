@@ -3,6 +3,7 @@
 ![nvim 1](./screenshots/3.png)
 ![nvim 2](./screenshots/4.png)
 ![nvim 3](./screenshots/5.png)
+Viet them 1 dong de test conflict nha
 
 # Lelouvincx's dotfiles
 My dotfiles configuration with alacritty, zsh, tmux and neovim
