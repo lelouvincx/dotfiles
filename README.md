@@ -29,8 +29,12 @@ Version: 5.8.1 or higher
 
 ## Neovim
 
+## Requirements
+
 ## Usage
 
+## Thanks to...
+
 ## About me
-Visit my blog: [redmapleleaf.me](https://redmapleleaf.me/)
-Email me: dinhminhchinh3357@duck.com
+- Visit my blog: [redmapleleaf.me](https://redmapleleaf.me/)
+- Email me: dinhminhchinh3357@duck.com
