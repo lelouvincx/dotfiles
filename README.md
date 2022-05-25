@@ -25,6 +25,10 @@ Version: 5.8.1 or higher
 - [Oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh): a framework for zsh plugin management and configuration
 - [Autosuggestions](https://github.com/zsh-users/zsh-autosuggestions): autosuggestions for zsh
 - [Syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting): highlights suggested command
+- [Powerlevel10k](https://github.com/romkatv/powerlevel10k): an out-of-the-box experienced theme for zsh
+- [The Fuck](https://github.com/nvbn/thefuck): an error correction for console commands
+- [Command-not-found](https://github.com/Tarrasch/zsh-command-not-found): provides suggested packages to be installed
+For more zsh plugins, [visit here](https://github.com/unixorn/awesome-zsh-plugins)
 
 ## Tmux
 
