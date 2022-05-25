@@ -122,6 +122,22 @@ For more dependencies, you can open neovim and run `:checkhealth` to know which 
 
 ## Usage
 
+Please make sure you know and understand how your configs work before continuing. Since this is just my personal working configurations, I don't provide any user support. Just look at it as a valuable references for your own configurations. If you run into any issues, you can try:
+1. Google and stackoverflow the error message
+2. Check your dependencies and environments
+3. Report with the plugin author
+
+Okay, let's move on to the usage guide:
+1. Firstly you should backup all your config files in one place to keep it safe.
+2. Fork this repo then clone to your local system and play with it anyway you want.
+
+Many thanks for reading until here and enjoy your own dotfiles!
+
+- Resource alacritty config by saving the `alacritty.yml` file.
+- Resource zsh config by `zsh ~/.zshrc` or relaunch the terminal.
+- Resource tmux by `tmux source ~/.tmux.conf`. And you can install extensions by pressing `Ctrl + b + I` (in this case prefix key is Ctrl + b).
+- Resource neovim config by saving then `:so%`. Or you can relaunch it.
+
 ## Thanks to...
 
 ## About me
