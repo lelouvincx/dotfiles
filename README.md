@@ -5,7 +5,7 @@
 ![nvim 3](./screenshots/5.png)
 
 # Lelouvincx's dotfiles
-My dotfiles configuration with alacritty, zsh, tmux and neovim
+My dotfiles configuration with alacritty, zsh, tmux and neovim.
 
 **Warning**: Don't blindly copy my settings and use directly in your system without knowing details. You should clone this repo and give it a try before applying to your system. Use at your own risk!
 
@@ -16,12 +16,12 @@ My dotfiles configuration with alacritty, zsh, tmux and neovim
 - Neovim
 
 ## Alacritty
-No need installing extensions but you need a [config file](./alacritty.yml)
+No need installing extensions but you need a [config file](./alacritty.yml).
 
-Font I used: DroidSansMono Nerd Font (supports icons). [More info](https://github.com/ryanoasis/nerd-fonts)
+Font I used: DroidSansMono Nerd Font (supports icons). [More info](https://github.com/ryanoasis/nerd-fonts).
 
 ## Zsh
-Version: 5.8.1 or higher
+Version: 5.8.1 or higher.
 
 - [Oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh): a framework for zsh plugin management and configuration
 - [Autosuggestions](https://github.com/zsh-users/zsh-autosuggestions): autosuggestions for zsh
@@ -30,15 +30,15 @@ Version: 5.8.1 or higher
 - [The Fuck](https://github.com/nvbn/thefuck): an error correction for console commands
 - [Command-not-found](https://github.com/Tarrasch/zsh-command-not-found): provides suggested packages to be installed
 
-For more zsh plugins, [visit here](https://github.com/unixorn/awesome-zsh-plugins)
+For more zsh plugins, [visit here](https://github.com/unixorn/awesome-zsh-plugins).
 
 ## Tmux
-Version: 3.2a or higher
+Version: 3.2a or higher.
 
 I customized from [.tmux](https://github.com/gpakosz/.tmux), you can separately clone this repo and use it for your own.
 
 ## Neovim
-Version: 0.7.0 or higher
+Version: 0.7.0 or higher.
 
 - [Vim-plug](https://github.com/junegunn/vim-plug): a minimalist vim plugin manager
 - [NeoSolarized](https://github.com/overcache/NeoSolarized): color scheme
@@ -64,7 +64,7 @@ Version: 0.7.0 or higher
 Read the fully installation [here](https://github.com/alacritty/alacritty/blob/master/INSTALL.md) for more.
 
 ### Zsh and oh-my-zsh
-Install zsh and oh-my-zsh plugin manager
+Install zsh and oh-my-zsh plugin manager.
 ```bash
 sudo apt-get install zsh -y
 sudo curl -L http://install.ohmyz.sh | sh
@@ -127,18 +127,19 @@ Please make sure you know and understand how your configs work before continuing
 2. Check your dependencies and environments
 3. Report with the plugin author
 
-Okay, let's move on to the usage guide:
-1. Firstly you should backup all your config files in one place to keep it safe.
-2. Fork this repo then clone to your local system and play with it anyway you want.
-
-Many thanks for reading until here and enjoy your own dotfiles!
+If you want to experience with this dotfiles it's pretty easy to do. Firstly you should backup all your config files in one place to keep it safe. Then fork this repo and clone to your local system and play with it anyway you want.
 
 - Resource alacritty config by saving the `alacritty.yml` file.
 - Resource zsh config by `zsh ~/.zshrc` or relaunch the terminal.
 - Resource tmux by `tmux source ~/.tmux.conf`. And you can install extensions by pressing `Ctrl + b + I` (in this case prefix key is Ctrl + b).
 - Resource neovim config by saving then `:so%`. Or you can relaunch it.
 
+Many thanks for reading until here and enjoy your own dotfiles!
+
 ## Thanks to...
+I want to give the special thanks to Ly Thanh Nhan, who first inspired me to use neovim as main IDE. After a pretty long time working on this project I think myself has a good knowledge and experience to share you guys. Besides, [balldk](https://github.com/balldk), [craftzdog](https://github.com/craftzdog/dotfiles-public) and [drievints](https://github.com/driesvints/dotfiles) taught me a lot for completing and improving my configs.
+
+In general, I want to give thanks to everyone who shares their dotfiles for their efforts to contribute their knowledge, mind and experience to the open-source community.
 
 ## About me
 - Visit my blog: [redmapleleaf.me](https://redmapleleaf.me/)
