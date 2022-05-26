@@ -1,4 +1,3 @@
-![zsh screenshot](./screenshots/1.png)
 ![tmux screenshot](./screenshots/2.png)
 ![nvim 1](./screenshots/3.png)
 ![nvim 2](./screenshots/4.png)
