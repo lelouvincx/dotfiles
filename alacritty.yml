@@ -22,7 +22,7 @@ window:
         lines: 38
 
     # Background opacity
-    opacity: 0.85
+    opacity: 1
 
     # Windows title
     title: Alacritty
