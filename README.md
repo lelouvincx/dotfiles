@@ -162,5 +162,5 @@ In general, I want to give thanks to everyone who shares their dotfiles for thei
 
 ## About me
 
-- Visit my blog: [redmapleleaf.me](https://redmapleleaf.me/)
+- Visit my blog: [lelovincx.hashnode.com](https://redmapleleaf.me/)
 - Email me: dinhminhchinh3357@duck.com
