@@ -24,6 +24,7 @@ Font I used: DroidSansMono Nerd Font (supports icons). [More info](https://githu
 
 ## Zsh
 
+(Update: currently not true, will be updated soon)
 Version: 5.8.1 or higher.
 
 - [Oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh): a framework for zsh plugin management and configuration
