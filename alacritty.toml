@@ -1,0 +1,67 @@
+live_config_reload = true
+
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.bright]
+black = "#565656"
+blue = "#49a4f8"
+cyan = "#99faf2"
+green = "#c0e17d"
+magenta = "#a47de9"
+red = "#ec5357"
+white = "#ffffff"
+yellow = "#f9da6a"
+
+[colors.normal]
+black = "#2e2e2e"
+blue = "#47a0f3"
+cyan = "#64dbed"
+green = "#abe047"
+magenta = "#7b5cb0"
+red = "#eb4129"
+white = "#e5e9f0"
+yellow = "#f6c744"
+
+[colors.primary]
+background = "#101421"
+foreground = "#fffbf6"
+
+[cursor]
+style = "Block"
+
+[env]
+TERM = "alacritty"
+
+[font]
+size = 12
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+
+[scrolling]
+history = 10000
+multiplier = 3
+
+[selection]
+save_to_clipboard = true
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+
+[window]
+decorations = "Full"
+dynamic_padding = false
+opacity = 0.95
+startup_mode = "Windowed"
+title = "Alacritty"
+
+[window.class]
+general = "Alacritty"
+instance = "Alacritty"
+
+[window.dimensions]
+columns = 130
+lines = 35
+
+[window.padding]
+x = 5
+y = 0
