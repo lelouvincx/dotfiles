@@ -8,12 +8,13 @@ return {
 			enabled = true,
 			auto_trigger = true,
 			hide_during_completion = true,
+			debounce = 75,
 			keymap = {
-				accept = "<C-l>", -- handled by nvim-cmp / blink.cmp
-				accept_word = false,
-				accept_line = false,
+				accept = false, -- handled by nvim-cmp / blink.cmp
+				accept_line = false, -- handled by nvim-cmp / blink.cmp
+				accept_word = "<C-l>", -- accept the current word
 				next = "<C-j>",
-				prev = "<C-k>",
+				prev = false, -- not neccessary
 				dismiss = "<C-x>",
 			},
 		},
@@ -34,8 +35,21 @@ return {
 		},
 		auto_refresh = true,
 		filetypes = {
+			-- true
+			python = true,
+			javascript = true,
+			typescript = true,
+			java = true,
 			markdown = true,
-			help = true,
+			yaml = true,
+			-- false
+			help = false,
+			gitcommit = false,
+			gitrebase = false,
+			hgcommit = false,
+			svn = false,
+			cvs = false,
+			["."] = false, -- all files without an extension
 		},
 		copilot_node_command = "node", -- Node.js version must be > 18.x
 	},
