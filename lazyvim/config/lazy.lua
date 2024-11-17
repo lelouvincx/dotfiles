@@ -46,7 +46,6 @@ require("lazy").setup({
 		-- extras util
 		{ import = "lazyvim.plugins.extras.util.project" },
 		{ import = "lazyvim.plugins.extras.util.startuptime" },
-		{ import = "lazyvim.plugins.extras.util.gitui" },
 		-- import/override with your plugins
 		{ import = "plugins" },
 	},

@@ -1,3 +1,8 @@
+local function has_words_before()
+	local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+	return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+end
+
 return {
 	"hrsh7th/nvim-cmp",
 	version = false, -- last release is way too old
@@ -6,7 +11,10 @@ return {
 		"hrsh7th/cmp-nvim-lsp",
 		"hrsh7th/cmp-buffer",
 		"hrsh7th/cmp-path",
+		"hrsh7th/cmp-cmdline",
+		"onsails/lspkind-nvim",
 	},
+
 	-- Not all LSP servers add brackets when completing a function.
 	-- To better deal with this, LazyVim adds a custom option to cmp,
 	-- that you can configure. For example:
@@ -24,12 +32,13 @@ return {
 		return {
 			auto_brackets = {}, -- configure any filetype to auto add brackets
 			completion = {
+				autocomplete = false,
 				completeopt = "menu,menuone,noinsert" .. (auto_select and "" or ",noselect"),
 			},
 			preselect = auto_select and cmp.PreselectMode.Item or cmp.PreselectMode.None,
 			mapping = cmp.mapping.preset.insert({
-				["<C-b>"] = cmp.mapping.scroll_docs(-4),
-				["<C-f>"] = cmp.mapping.scroll_docs(4),
+				["<C-p>"] = cmp.mapping.scroll_docs(-4),
+				["<C-n>"] = cmp.mapping.scroll_docs(4),
 				["<C-Space>"] = cmp.mapping.complete(),
 				["<CR>"] = LazyVim.cmp.confirm({ select = auto_select }),
 				["<C-y>"] = LazyVim.cmp.confirm({ select = true }),
@@ -38,8 +47,31 @@ return {
 					cmp.abort()
 					fallback()
 				end,
-				-- ["<C-j>"] = cmp.mapping.select_next_item(), -- NOTE: added my config here
-				-- ["<C-k>"] = cmp.mapping.select_prev_item(), -- NOTE: added my config here
+				-- NOTE: added my config here
+				["<C-j>"] = cmp.mapping.select_next_item(),
+				["<C-k>"] = cmp.mapping.select_prev_item(),
+				["<Tab>"] = cmp.mapping(function(fallback)
+					if require("copilot.suggestion").is_visible() then
+						require("copilot.suggestion").accept()
+					elseif cmp.visible() then
+						cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
+					elseif has_words_before() then
+						cmp.complete()
+					else
+						fallback()
+					end
+				end, {
+					"i",
+					"s",
+				}),
+				["<S-Tab>"] = cmp.mapping(function()
+					if cmp.visible() then
+						cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+					end
+				end, {
+					"i",
+					"s",
+				}),
 			}),
 			sources = cmp.config.sources({
 				{ name = "nvim_lsp" },
@@ -73,7 +105,15 @@ return {
 					hl_group = "CmpGhostText",
 				},
 			},
-			sorting = defaults.sorting,
+			sorting = defaults.sorting, -- use default sorting
+			-- NOTE: menu interation with copilot suggestion
+			cmp.event:on("menu_opened", function()
+				vim.b.copilot_suggestion_hidden = true
+			end),
+
+			cmp.event:on("menu_closed", function()
+				vim.b.copilot_suggestion_hidden = false
+			end),
 		}
 	end,
 	main = "lazyvim.util.cmp",
