@@ -1,6 +1,8 @@
 [general]
 live_config_reload = true
 
+# [env]
+
 [colors]
 draw_bold_text_with_bright_colors = true
 
@@ -29,7 +31,11 @@ background = "#101421"
 foreground = "#fffbf6"
 
 [cursor]
-style = "Block"
+style.shape = "Block"          # "Block" | "Underline" | "Beam"
+style.blinking = "On"          # "Never" | "Off" | "On" | "Always"
+blink_interval = 750
+vi_mode_style.shape = "Block"
+vi_mode_style.blinking = "Off"
 
 [env]
 TERM = "alacritty"
@@ -41,19 +47,24 @@ size = 16
 family = "JetBrainsMono Nerd Font Mono"
 
 [scrolling]
-history = 10000
-multiplier = 3
+history = 5000
+multiplier = 5
 
 [selection]
 save_to_clipboard = true
 semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 
 [window]
-decorations = "Full"
-dynamic_padding = false
-opacity = 0.95
-startup_mode = "Windowed"
+decorations = "Buttonless" # "Full" | "None" | "Transparent" | "Buttonless"
+dynamic_padding = true
+opacity = 0.1
+blur = true
+startup_mode = "Windowed"  # "Windowed" | "Maximized" | "Fullscreen" | "SimpleFullscreen"
 title = "Alacritty"
+dynamic_title = true
+resize_increments = true
+# NOTE: These options are only available on macOS
+option_as_alt = "OnlyLeft" # "OnlyLeft" | "OnlyRight" | "Both" | "None"
 
 [window.class]
 general = "Alacritty"
@@ -64,5 +75,5 @@ columns = 130
 lines = 35
 
 [window.padding]
-x = 5
+x = 10
 y = 0
