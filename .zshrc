@@ -30,16 +30,22 @@ alias ld="lazydocker"
 
 # Alias lazygit, commitizen
 alias lz="lazygit"
-alias c="cz commit"
+alias c="uvx --from commitizen cz c"
 
 # Alias zshrc
 alias zshrc="nvim ~/.zshrc"
 
 # Alias neovim
 alias n="nvim ."
+alias nv="nvim"
 
 # Config spaceship prompt
 SPACESHIP_CHAR_SYMBOL='↓'
+export SPACESHIP_CONFIG="$HOME/Repos/dotfiles/spaceship.zsh"
+source "${HOME}/.zim/modules/spaceship/spaceship.zsh"
+
+# Alias speedtest
+alias speedtest="docker run -ti --rm --init --net host --name speedtest huss4in7/speedtest-cli --accept-license"
 
 # Asdf configurations
 . "$HOME/.asdf/asdf.sh"
