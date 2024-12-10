@@ -41,7 +41,6 @@ SPACESHIP_PROMPT_ORDER=(
   zig            # Zig section
   purescript     # PureScript section
   erlang         # Erlang section
-  gleam          # Gleam section
   kubectl        # Kubectl context section
   ansible        # Ansible section
   terraform      # Terraform workspace section
