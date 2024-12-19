@@ -5,8 +5,8 @@ SPACESHIP_PROMPT_ORDER=(
   dir            # Current directory section
   host           # Hostname section
   git            # Git section (git_branch + git_status)
-  python         # Python section
   venv           # virtualenv section
+  python         # Python section
   hg             # Mercurial section (hg_branch  + hg_status)
   package        # Package version
   node           # Node.js section
@@ -58,7 +58,12 @@ SPACESHIP_PROMPT_ORDER=(
   char           # Prompt character
 )
 
+# Git settings
+SPACESHIP_GIT_SHOW=always
+
 # Adds a line break after the git section
 SPACESHIP_PROMPT_SEPARATE_LINE=true
 
-SPACESHIP_TIME_SHOW=false
+# Venv settings
+SPACESHIP_VENV_SHOW=always
+SPACESHIP_VENV_ASYNC=true
