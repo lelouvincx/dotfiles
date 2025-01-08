@@ -21,6 +21,8 @@ jobs:
 
       # Step 2: Update Submodules
       - name: Update Submodules
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use GitHub token to authenticate
         run: |
           git submodule update --remote --merge
           git add .
