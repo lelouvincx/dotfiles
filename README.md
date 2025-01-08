@@ -1,138 +1,140 @@
-# Lelouvincx's dotfiles
+# lelouvincx's dotfiles 🚀
 
-My dotfiles configuration with alacritty, zsh, tmux and neovim.
+Welcome to my **dotfiles** repository! This project serves as a central hub for managing, sharing, and maintaining my development environment configurations. From Vim tweaks to terminal optimizations, these configurations aim to enhance productivity and streamline workflows.
 
-**Warning**: Don't blindly copy my settings and use directly in your system without knowing details. You should clone this repo and give it a try before applying to your system. Use at your own risk!
+---
 
-## Contents
+## 🎯 **Features**
 
-- Alacritty
-- Zsh
-- Tmux
-- Neovim
+- **Neovim Configuration**:
+  - Modular structure with plugins managed via `lazy.nvim`.
+  - Advanced LSP integration (`pyright`, `lua_ls`, etc.).
+  - AI-powered suggestions using `copilot.nvim`.
+  - Preconfigured plugins for coding, UI enhancements, and more.
+- **Shell Customizations**:
 
-## Alacritty
+  - Zsh setup using the `spaceship.zsh` prompt.
+  - Optimized `.zshrc` for aliases, environment variables, and plugins.
 
-No need installing extensions but you need a [config file](./alacritty.yml).
+- **Terminal Configurations**:
 
-Font I used: JetbrainsMono Nerd Font Mono (supports icons). [More info](https://github.com/ryanoasis/nerd-fonts).
+  - Themes and key bindings for `alacritty` and `tmux`.
 
-## Zsh
+- **Git Submodules**:
+  - Automatically updated via GitHub Actions.
+  - Seamless integration of external repositories.
 
-(Update: currently not true, will be updated soon)
-Version: 5.9 or higher.
+---
 
-- [ZimFW](https://github.com/ohmyzsh/ohmyzsh): a framework for zsh plugin management and configuration
+## 📂 **Repository Structure**
 
-For more zsh plugins, [visit here](https://github.com/unixorn/awesome-zsh-plugins).
-
-## Tmux
-
-Version: 3.2a or higher.
-
-I customized from [.tmux](https://github.com/gpakosz/.tmux), you can separately clone this repo and use it for your own.
-
-## Neovim
-
-Version: 0.10.0 or higher.
-
-## Requirements
-
-### Alacritty
-
-Read the fully installation [here](https://github.com/alacritty/alacritty/blob/master/INSTALL.md) for more.
-
-### Zsh and oh-my-zsh
-
-Install zsh and oh-my-zsh plugin manager.
-
-```bash
-sudo apt-get install zsh -y
-sudo curl -L http://install.ohmyz.sh | sh
-git clone git://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
+```plaintext
+├── .github/
+│   ├── ISSUE_TEMPLATE/           # Templates for bug reports and feature requests
+│   ├── workflows/                # GitHub Actions for CI/CD automation
+│       ├── update-submodule.yml  # Automated submodule updates
+├── nvim/                         # Neovim-specific configurations
+│   ├── after/                    # File-specific settings
+│   ├── ftdetect/                 # File type detection
+│   ├── lua/                      # Lua modules for plugins and settings
+│   ├── .github/                  # Submodules-specific workflows
+├── .gitignore                    # Ignored files
+├── .tmux.conf                    # tmux configuration
+├── .zshrc                        # Zsh configuration
+├── LICENSE                       # Licensing information
+├── README.md                     # Project documentation (this file)
+├── alacritty.toml                # Alacritty terminal configuration
+├── default-iterm-profile.json    # iTerm2 configuration
 ```
 
-Set it as the default shell
+---
+
+## 🔧 **Getting Started**
+
+### Prerequisites
+
+- **Git**: For managing and cloning the repository.
+- **Neovim**: Latest version is recommended.
+- **Zsh**: Preferred shell environment.
+- **Tmux**: For terminal multiplexing.
+- **Alacritty**: Terminal emulator.
+
+### Installation
+
+1. Clone this repository:
+   ```bash
+   git clone --recursive https://github.com/lelouvincx/dotfiles.git ~/.dotfiles
+   ```
+2. Navigate to the repository:
+   ```bash
+   cd ~/.dotfiles
+   ```
+3. Run the setup script (if available) or manually link the files:
+   ```bash
+   ./install.sh
+   ```
+   _or manually symlink configurations:_
+   ```bash
+   ln -s ~/.dotfiles/.zshrc ~/.zshrc
+   ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
+   ```
+
+### Updating
+
+To pull the latest changes and update submodules:
 
 ```bash
-sudo chsh -s $(which zsh)
+git pull --recurse-submodules
+git submodule update --remote --merge
 ```
 
-### Tmux
+---
 
-Install tmux
+## 🤝 **Contributing**
 
-```bash
-sudo apt-get install tmux
-```
+Contributions are welcome! Here's how you can help:
 
-### Neovim
+1. Fork this repository.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "feat: add your feature"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/your-feature
+   ```
+5. Open a pull request.
 
-Download the releases and install the latest version of neovim [here](https://github.com/neovim/neovim/releases/tag/v0.7.0).
+Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
-#### Ruby
+---
 
-```bash
-sudo apt-get install ruby-full
-```
+## 🛠️ **Automation**
 
-#### Nodejs
+### GitHub Actions
 
-```bash
-sudo apt-get install nodejs
-sudo apt-get install npm
-```
+- **Submodule Updates**: Automatically keeps submodules in sync with their latest commits.
+- **Release Management**: Uses `release-please` for version tagging and changelogs.
 
-#### Neovim package on python3, nodejs, ruby
+---
 
-```bash
-sudo apt-get install python3-pip # If pip's not on your system
-pip install neovim
-pip install pynvim
+## 📝 **License**
 
-sudo npm install -g neovim
+This repository is licensed under the [MIT License](LICENSE). Feel free to use and adapt these configurations.
 
-gem install neovim
-```
+---
 
-#### Neovim package on python2
+## 🌟 **Acknowledgments**
 
-```bash
-curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py # To download get-pip.py
-sudo python2 get-pip.py
-pip2 --version # Check the pip2's version
+- Plugins and integrations from the vibrant open-source community.
+- Inspired by [LazyVim](https://github.com/LazyVim/LazyVim).
 
-pip2 install neovim
-pip2 install pynvim
-```
+---
 
-For more dependencies, you can open neovim and run `:checkhealth` to know which packages need installing.
+## 🐞 **Support**
 
-## Usage
-
-Please make sure you know and understand how your configs work before continuing. Since this is just my personal working configurations, I don't provide any user support. Just look at it as a valuable references for your own configurations. If you run into any issues, you can try:
-
-1. Google and stackoverflow the error message
-2. Check your dependencies and environments
-3. Report with the plugin author
-
-If you want to experience with this dotfiles it's pretty easy to do. Firstly you should backup all your config files in one place to keep it safe. Then fork this repo and clone to your local system and play with it anyway you want.
-
-- Resource alacritty config by saving the `alacritty.yml` file.
-- Resource zsh config by `zsh ~/.zshrc` or relaunch the terminal.
-- Resource tmux by `tmux source ~/.tmux.conf`. And you can install extensions by pressing `Ctrl + b + I` (in this case prefix key is Ctrl + b).
-- Resource neovim config by saving then `:so%`. Or you can relaunch it.
-
-Many thanks for reading until here and enjoy your own dotfiles!
-
-## Thanks to...
-
-I want to give the special thanks to Ly Thanh Nhan, who first inspired me to use neovim as main IDE (you can visit his blog [here](https://nextlint.com/@lythanhnhan27294)). After a pretty long time working on this project I think myself has a good knowledge and experience to share you guys. Besides, [balldk](https://github.com/balldk), [craftzdog](https://github.com/craftzdog/dotfiles-public) and [drievints](https://github.com/driesvints/dotfiles) taught me a lot for completing and improving my configs.
-
-In general, I want to give thanks to everyone who shares their dotfiles for their efforts to contribute their knowledge, mind and experience to the open-source community.
-
-## About me
-
-- Visit my blog: [lelovincx](https://lelouvincx.hashnode.com)
-- Email me: dinhminhchinh3357@duck.com
+Found a bug? Want to request a feature? Open an issue in the [issue tracker](https://github.com/lelouvincx/dotfiles/issues).
