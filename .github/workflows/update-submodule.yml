@@ -1,0 +1,34 @@
+name: Auto Update Submodules
+
+on:
+  push: # Trigger on push to the repository
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering
+  schedule: # Optional: Schedule the action
+    - cron: "0 0 1 * *" # Runs every month at midnight
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive # Ensures submodules are checked out
+
+      # Step 2: Update Submodules
+      - name: Update Submodules
+        run: |
+          git submodule update --remote --merge
+          git add .
+          git commit -m "auto(nvim): update latest nvim submodule" || echo "No changes to commit"
+
+      # Step 3: Push Changes (if any)
+      - name: Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use GitHub token to authenticate
+        run: |
+          git push origin HEAD
