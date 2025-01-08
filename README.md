@@ -1,5 +1,7 @@
 # lelouvincx's dotfiles 🚀
 
+[![Auto Update Submodules](https://github.com/lelouvincx/dotfiles/actions/workflows/update-submodule.yml/badge.svg)](https://github.com/lelouvincx/dotfiles/actions/workflows/update-submodule.yml)
+
 Welcome to my **dotfiles** repository! This project serves as a central hub for managing, sharing, and maintaining my development environment configurations. From Vim tweaks to terminal optimizations, these configurations aim to enhance productivity and streamline workflows.
 
 ---
