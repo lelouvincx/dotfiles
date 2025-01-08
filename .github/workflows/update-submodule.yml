@@ -1,19 +1,21 @@
 name: Auto Update Submodules
 
 on:
-  push: # Trigger on push to the repository
-    branches:
-      - main
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch: # Allows manual triggering from source repo lelouvincx/nvim
   schedule: # Optional: Schedule the action
     - cron: "0 0 1 * *" # Runs every month at midnight
 
 jobs:
   update-submodules:
+    name: "Update Submodules"
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      # Step 1: Checkout the repository
+      # Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
@@ -24,13 +26,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use GitHub token to authenticate
         run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'bot@noreply.github.com'
+          git pull --recurse-submodules
           git submodule update --remote --merge
-          git add .
-          git commit -m "auto(nvim): update latest nvim submodule" || echo "No changes to commit"
 
       # Step 3: Push Changes (if any)
       - name: Push Changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use GitHub token to authenticate
         run: |
+          git add .
+          git commit -am "auto(nvim): update latest nvim submodule" || echo "No changes to commit"
           git push origin HEAD
