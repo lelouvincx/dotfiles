@@ -1,8 +1,8 @@
+export EDITOR=nvim
+export GITHUB_TOKEN=
+
 # Bind auto suggest key
 bindkey '`' autosuggest-accept
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Clear screen
 alias cls="clear"
@@ -10,6 +10,7 @@ alias cls="clear"
 # Zoxide
 eval "$(zoxide init zsh)"
 
+# For ls alternative, use exa or lsd
 # Use lsd instead of ls
 alias ls="lsd"
 alias la="lsd -a"
@@ -24,7 +25,7 @@ alias l="exa -lahg --icons --color=always --group-directories-first --git"
 alias lt="exa -T -L 2"
 
 # Use bat instead for cat
-alias cat="bat --theme Catppuccin-mocha"
+alias cat="bat"
 
 # Alias tmux
 alias ta="TERM=screen-256color tmux attach"
@@ -40,7 +41,6 @@ alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wa
 alias lz="lazygit"
 alias c="uvx --from commitizen cz c"
 alias gits="git status"
-alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
 
 # Alias zshrc
 alias zshrc="nvim ~/.zshrc"
@@ -54,26 +54,34 @@ SPACESHIP_CHAR_SYMBOL='↓'
 export SPACESHIP_CONFIG="$HOME/Repos/dotfiles/spaceship.zsh"
 source "${HOME}/.zim/modules/spaceship/spaceship.zsh"
 
-# Alias clear
-alias cls="clear"
-
 # Alias speedtest
 alias speedtest="docker run -ti --rm --init --net host --name speedtest huss4in7/speedtest-cli --accept-license"
 
+# Direnv
+eval "$(direnv hook zsh)"
+
+# For language mangement, use either asdf or mise
 # Asdf configurations
 . "$HOME/.asdf/asdf.sh"
 fpath=(${ASDF_DIR}/completions $fpath) # append completions to fpath
-
-# Set JAVA_HOME
-. ~/.asdf/plugins/java/set-java-home.zsh
+# Mise activate
+eval "$($HOME/.local/bin/mise activate zsh)"
 
 # Alacritty auto suggest
 fpath+=${ZDOTDIR:-~}/.zsh_functions
 fpath+=${ZDOTDIR:-~}/.zsh_functions
 
-# Mojo path
-export MODULAR_HOME="/home/lelouvincx/.modular"
-export PATH="/home/lelouvincx/.modular/pkg/packages.modular.com_mojo/bin:$PATH"
+# Alias stirling-pdf - a local many-in-one pdf tool
+alias stirling-pdf='docker run --rm -d --name stirling-pdf -p 8080:8080 -v "./StirlingPDF/trainingData:/usr/share/tessdata" -v "./StirlingPDF/extraConfigs:/configs" -v "./StirlingPDF/customFiles:/customFiles/" -v "./StirlingPDF/logs:/logs/" -v "./StirlingPDF/pipeline:/pipeline/" -e DOCKER_ENABLE_SECURITY=false -e LANGS=en_GB stirlingtools/stirling-pdf:latest'
+
+# Alias fastfetch
+alias f="fastfetch -c examples/12.jsonc"
+
+# Alias pre-commit
+alias pre-commit="uvx pre-commit"
+
+# Alias sqlfluff
+alias sqlfluff="uvx sqlfluff"
 
 # Set cowsay
 cowsay -f tux "Hello lelouvincx"
