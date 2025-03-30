@@ -1,4 +1,3 @@
-
 RCS
 .+,v
 
@@ -21,4 +20,6 @@ _darcs
 ^/LICENSE.*
 ^/COPYING
 
-scripts/
+^/scripts
+^/.pr_agent.toml
+^/.pre-commit-config.yaml
