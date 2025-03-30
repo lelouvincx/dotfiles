@@ -41,7 +41,7 @@ vi_mode_style.blinking = "Off"
 TERM = "alacritty"
 
 [font]
-size = 16
+size = 17
 
 [font.normal]
 family = "JetBrainsMono Nerd Font Mono"
@@ -57,7 +57,7 @@ semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 [window]
 decorations = "Buttonless" # "Full" | "None" | "Transparent" | "Buttonless"
 dynamic_padding = true
-opacity = 0.1
+opacity = 0.9
 blur = true
 startup_mode = "Windowed"  # "Windowed" | "Maximized" | "Fullscreen" | "SimpleFullscreen"
 title = "Alacritty"
@@ -75,5 +75,5 @@ columns = 130
 lines = 35
 
 [window.padding]
-x = 10
-y = 0
+x = 0
+y = 10
