@@ -11,7 +11,7 @@ publish_output_no_suggestions = true
 verbosity_level = 0                  # 0,1,2
 use_extra_bad_extensions = false
 # Configurations
-use_wiki_settings_file = true
+use_wiki_settings_file = false
 use_repo_settings_file = true
 use_global_settings_file = true
 disable_auto_feedback = false
@@ -53,26 +53,27 @@ ignore_pr_authors = [] # authors to ignore from PR agent when an PR is created
 is_auto_command = false    # will be auto-set to true if the command is triggered by an automation
 enable_ai_metadata = false # will enable adding ai metadata
 
+
 [pr_reviewer] # /review #
 # enable/disable features
-require_score_review = true
-require_tests_review = true
+require_score_review = false
+require_tests_review = false
 require_estimate_effort_to_review = false
-require_can_be_split_review = true
-require_security_review = true
-require_ticket_analysis_review = true
+require_can_be_split_review = false
+require_security_review = false
+require_ticket_analysis_review = false
 # general options
-persistent_comment = true
+persistent_comment = false
 extra_instructions = "Think step by step."
-final_update_message = true
+final_update_message = false
 # review labels
-enable_review_labels_security = true
-enable_review_labels_effort = true
+enable_review_labels_security = false
+enable_review_labels_effort = false
 # specific configurations for incremental review (/review -i)
 require_all_thresholds_for_incremental_review = false
 minimal_commits_for_incremental_review = 0
 minimal_minutes_for_incremental_review = 0
-enable_intro_text = true
+enable_intro_text = false
 enable_help_text = false                              # Determines whether to include help text in the PR review. Enabled by default.
 # auto approval
 enable_auto_approval = false
@@ -105,6 +106,7 @@ max_ai_calls = 8
 async_ai_calls = true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
+
 [pr_questions] # /ask #
 enable_help_text = false
 
@@ -120,7 +122,7 @@ extra_instructions = "Think step by step. Write short and concise."
 enable_help_text = false
 enable_chat_text = true
 enable_intro_text = true
-persistent_comment = true
+persistent_comment = false
 max_history_len = 8
 # enable to apply suggestion 💎
 apply_suggestions_checkbox = true
@@ -143,8 +145,9 @@ approve_pr_on_self_review = false                                               
 fold_suggestions_on_self_review = true                                                                                                  # Pro feature. if true, the code suggestions will be folded after the author clicks on the self-review checkbox
 # Suggestion impact 💎
 publish_post_process_suggestion_impact = true
-wiki_page_accepted_suggestions = true
+wiki_page_accepted_suggestions = false
 allow_thumbs_up_down = false
+
 
 [pr_custom_prompt] # /custom_prompt #
 prompt = """\
@@ -165,13 +168,16 @@ docs_style = "Sphinx"   # "Google Style with Args, Returns, Attributes...etc", "
 file = ""               # in case there are several components with the same name, you can specify the relevant file
 class_name = ""         # in case there are several methods with the same name in the same file, you can specify the relevant class name
 
+
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes = false
 extra_instructions = ""
 add_pr_link = true
 
+
 [pr_analyze] # /analyze #
 enable_help_text = true
+
 
 [pr_test] # /test #
 extra_instructions = ""
@@ -182,11 +188,13 @@ file = ""                # in case there are several components with the same na
 class_name = ""          # in case there are several methods with the same name in the same file, you can specify the relevant class name
 enable_help_text = false
 
+
 [pr_improve_component] # /improve_component #
 num_code_suggestions = 4
 extra_instructions = ""
 file = ""                # in case there are several components with the same name, you can specify the relevant file
 class_name = ""          # in case there are several methods with the same name in the same file, you can specify the relevant class name
+
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback = true
@@ -197,9 +205,11 @@ persistent_comment = true
 enable_help_text = true
 final_update_message = false
 
+
 [pr_help] # /help #
 force_local_db = false
 num_retrieved_snippets = 5
+
 
 [pr_config] # /config #
 
