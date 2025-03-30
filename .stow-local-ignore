@@ -12,6 +12,7 @@ _darcs
 \.git
 \.gitignore
 \.gitmodules
+\.github
 
 .+~          # emacs backup files
 \#.*\#       # emacs autosave files
@@ -21,5 +22,6 @@ _darcs
 ^/COPYING
 
 ^/scripts
+^/qodo
 ^/.pr_agent.toml
 ^/.pre-commit-config.yaml
