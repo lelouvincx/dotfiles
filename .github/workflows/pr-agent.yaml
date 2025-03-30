@@ -34,7 +34,6 @@ jobs:
       - name: Remove old user command comments
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CI_TOKEN }}
           script: |
             const commandPrefixes = ['/describe', '/review', '/improve', '/ask', '/update_changelog',
                                     '/similar_issue', '/help', '/generate_labels', '/analyze', '/test',
