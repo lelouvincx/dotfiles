@@ -11,6 +11,5 @@ export GITHUB_TOKEN=
 export LS_EXECUTABLE=lsd # either lsd or exa
 export LANGUAGE_EXECUTABLE=mise # either asdf or mise
 
-# TODO: update this
 # Spaceship prompt config
-# export SPACESHIP_CONFIG="$HOME/Repos/dotfiles/spaceship.zsh"
+export SPACESHIP_CONFIG="${HOME}/Developer/dotfiles/spaceship.zsh"
