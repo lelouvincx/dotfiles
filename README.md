@@ -23,8 +23,14 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
   - Themes and key bindings for `alacritty` and `tmux`.
 
 - **Git Submodules**:
+
   - Automatically updated via GitHub Actions.
   - Seamless integration of external repositories.
+
+- **GNU Stow Integration**:
+  - Organized, modular configuration management
+  - Easy installation with selective module support
+  - Simplified dotfiles updates and maintenance
 
 ---
 
@@ -34,19 +40,28 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 ├── .github/
 │   ├── ISSUE_TEMPLATE/           # Templates for bug reports and feature requests
 │   ├── workflows/                # GitHub Actions for CI/CD automation
-│       ├── update-submodule.yml  # Automated submodule updates
+├── alacritty/                    # Alacritty terminal configuration
+│   └── .config/
+│       └── alacritty/
+│           └── alacritty.toml
 ├── nvim/                         # Neovim-specific configurations
-│   ├── after/                    # File-specific settings
-│   ├── ftdetect/                 # File type detection
-│   ├── lua/                      # Lua modules for plugins and settings
-│   ├── .github/                  # Submodules-specific workflows
-├── .gitignore                    # Ignored files
-├── .tmux.conf                    # tmux configuration
-├── .zshrc                        # Zsh configuration
+│   └── .config/
+│       └── nvim/                 # Neovim configuration files
+├── tmux/                         # tmux configuration
+│   └── .tmux.conf
+├── zsh/                          # Zsh configurations
+│   ├── .zimrc
+│   ├── .zsh/                     # Zsh modules (aliases, env, etc.)
+│   ├── .zshenv
+│   └── .zshrc
+├── local/                        # Local scripts and utilities
+│   └── .local/
+│       └── bin/                  # User scripts
+├── .stow-local-ignore            # Patterns for files Stow should ignore
+├── Brewfile                      # Homebrew packages list
+├── install.sh                    # Installation script using GNU Stow
 ├── LICENSE                       # Licensing information
-├── README.md                     # Project documentation (this file)
-├── alacritty.toml                # Alacritty terminal configuration
-├── default-iterm-profile.json    # iTerm2 configuration
+└── README.md                     # Project documentation (this file)
 ```
 
 ---
@@ -56,6 +71,7 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 ### Prerequisites
 
 - **Git**: For managing and cloning the repository.
+- **GNU Stow**: For managing symlinks to dotfiles.
 - **Neovim**: Latest version is recommended.
 - **Zsh**: Preferred shell environment.
 - **Tmux**: For terminal multiplexing.
@@ -64,22 +80,49 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 ### Installation
 
 1. Clone this repository:
+
    ```bash
    git clone --recursive https://github.com/lelouvincx/dotfiles.git ~/.dotfiles
    ```
+
 2. Navigate to the repository:
+
    ```bash
    cd ~/.dotfiles
    ```
-3. Run the setup script (if available) or manually link the files:
+
+3. Install GNU Stow if not already installed:
+
+   ```bash
+   # macOS
+   brew install stow
+
+   # Ubuntu/Debian
+   sudo apt install stow
+
+   # Fedora/RHEL
+   sudo dnf install stow
+   ```
+
+4. Run the installation script to install all configurations:
+
    ```bash
    ./install.sh
    ```
-   _or manually symlink configurations:_
+
+   Or install specific modules:
+
    ```bash
-   ln -s ~/.dotfiles/.zshrc ~/.zshrc
-   ln -s ~/.dotfiles/.tmux.conf ~/.tmux.conf
+   ./install.sh zsh tmux nvim
    ```
+
+### Available Modules
+
+- `alacritty` - Alacritty terminal configuration
+- `nvim` - Neovim configuration
+- `tmux` - Tmux configuration
+- `zsh` - ZSH configuration
+- `local` - Scripts and utilities in `.local/bin`
 
 ### Updating
 
@@ -88,6 +131,12 @@ To pull the latest changes and update submodules:
 ```bash
 git pull --recurse-submodules
 git submodule update --remote --merge
+```
+
+After updating, rerun the installation script:
+
+```bash
+./install.sh
 ```
 
 ---
@@ -134,6 +183,7 @@ This repository is licensed under the [MIT License](LICENSE). Feel free to use a
 
 - Plugins and integrations from the vibrant open-source community.
 - Inspired by [LazyVim](https://github.com/LazyVim/LazyVim).
+- [GNU Stow](https://www.gnu.org/software/stow/) for excellent dotfiles management.
 
 ---
 
