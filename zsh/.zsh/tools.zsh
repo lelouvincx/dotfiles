@@ -1,6 +1,20 @@
 #!/bin/zsh
 # Tool configurations
 
+# Configure language management tool (asdf or mise)
+# WARN: asdf or mise must be intalled first, to be able to use other tools
+if [[ "$LANGUAGE_EXECUTABLE" == "asdf" ]]; then
+  # Asdf configurations
+  . "$HOME/.asdf/asdf.sh"
+  fpath=(${ASDF_DIR}/completions $fpath) # append completions to fpath
+elif [[ "$LANGUAGE_EXECUTABLE" == "mise" ]]; then
+  # Mise activate
+  eval "$($HOME/.local/bin/mise activate zsh)"
+else
+  echo "Invalid value for LANGUAGE_EXECUTABLE. Please set it to either 'asdf' or 'mise'."
+  exit 1
+fi
+
 # Zoxide initialization
 eval "$(zoxide init zsh)"
 
@@ -23,18 +37,5 @@ elif [[ "$LS_EXECUTABLE" == "exa" ]]; then
   alias lt="exa -T -L 2"
 else
   echo "Invalid value for LS_EXECUTABLE. Please set it to either 'lsd' or 'exa'."
-  exit 1
-fi
-
-# Configure language management tool (asdf or mise)
-if [[ "$LANGUAGE_EXECUTABLE" == "asdf" ]]; then
-  # Asdf configurations
-  . "$HOME/.asdf/asdf.sh"
-  fpath=(${ASDF_DIR}/completions $fpath) # append completions to fpath
-elif [[ "$LANGUAGE_EXECUTABLE" == "mise" ]]; then
-  # Mise activate
-  eval "$($HOME/.local/bin/mise activate zsh)"
-else
-  echo "Invalid value for LANGUAGE_EXECUTABLE. Please set it to either 'asdf' or 'mise'."
   exit 1
 fi
