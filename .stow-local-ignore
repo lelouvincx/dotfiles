@@ -25,3 +25,5 @@ _darcs
 ^/qodo
 ^/.pr_agent.toml
 ^/.pre-commit-config.yaml
+^/spaceship.zsh.zwc
+^/DS_Store
