@@ -10,7 +10,7 @@ if ! command -v stow &>/dev/null; then
 	exit 1
 fi
 
-modules=("zsh" "tmux" "alacritty" "nvim" "local" "mise")
+modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
 
 unstow_module() {
 	echo "Unstowing $1 from target at ${HOME}"
