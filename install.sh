@@ -31,7 +31,7 @@ fi
 mkdir -p ~/.config
 mkdir -p ~/.local/bin
 
-modules=("zsh" "tmux" "alacritty" "nvim" "local")
+modules=("zsh" "tmux" "alacritty" "nvim" "local" "mise")
 
 module_exists() {
 	local module="$1"
