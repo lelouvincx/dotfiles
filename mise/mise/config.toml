@@ -1,0 +1,12 @@
+[tools]
+1password-cli = "latest"
+direnv = "latest"
+gcloud = "latest"
+gum = "latest"
+lazydocker = "latest"
+lazygit = "latest"
+neovim = "0.10.4"
+node = "latest"
+python = "3.11.10"
+rust = "latest"
+uv = "latest"

@@ -41,11 +41,7 @@ if ! command -v stow &>/dev/null; then
 	exit 1
 fi
 
-# Create necessary directories
-mkdir -p "${CONFIG_DIR}"
-mkdir -p "${HOME}/.local/bin"
-
-# Define modules and their targets
+# Define modules
 modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
 
 # Get target directory for a module
@@ -59,7 +55,7 @@ get_target_dir() {
 		echo "$CONFIG_DIR"
 		;;
 	*)
-		echo "$HOME_DIR" # Default to home directory
+		echo "$HOME_DIR" # Default
 		;;
 	esac
 }
@@ -75,19 +71,18 @@ module_exists() {
 	return 1
 }
 
-# Stow a module
-stow_module() {
+# Unstow a module
+unstow_module() {
 	local module_name="$1"
 	local target_dir=$(get_target_dir "$module_name")
-
-	echo -e "Stowing ${BOLD}${GREEN}$module_name${NC} to target at ${BLUE}${target_dir}${NC}"
-	stow -v -t "$target_dir" "$module_name"
+	echo -e "Unstowing ${BOLD}${RED}$module_name${NC} from target at ${BLUE}${target_dir}${NC}"
+	stow -v -D -t "$target_dir" "$module_name"
 }
 
-# Stow all modules
-stow_all() {
+# Unstow all modules
+unstow_all() {
 	for module in "${modules[@]}"; do
-		stow_module "$module"
+		unstow_module "$module"
 	done
 }
 
@@ -107,23 +102,22 @@ print_banner() {
 # Main function
 main() {
 	print_banner
-
 	echo -e "Available modules: ${YELLOW}${modules[*]}${NC}"
-	echo -e "${BOLD}Starting installation of stow modules...${NC}"
+	echo -e "${BOLD}Starting uninstallation of stow modules...${NC}"
 	echo -e "\n"
 
 	# Check if specific modules were requested
 	if [ $# -eq 0 ]; then
-		echo -e "${CYAN}Installing all modules...${NC}"
-		stow_all
+		echo -e "${CYAN}Uninstalling all modules...${NC}"
+		unstow_all
 	else
 		debug "Input arguments: $@"
-		# Install specified modules
+		# Uninstall specified modules
 		for module in "$@"; do
 			debug "Processing module: $module"
 			if module_exists "$module"; then
 				debug "Module '$module' exists in the list."
-				stow_module "$module"
+				unstow_module "$module"
 			else
 				debug "Module '$module' does not exist in the list."
 				echo -e "${RED}Module '$module' is not recognized. Please check the available modules.${NC}"
@@ -131,7 +125,7 @@ main() {
 		done
 	fi
 
-	echo -e "\n${GREEN}${BOLD}Installation stow modules complete!${NC}"
+	echo -e "\n${GREEN}${BOLD}Uninstallation of stow modules complete!${NC}"
 }
 
 # Execute main function
