@@ -30,6 +30,7 @@ alias speedtest="docker run -ti --rm --init --net host --name speedtest huss4in7
 alias lz="lazygit"
 alias c="uvx --from commitizen cz c"
 alias gs="git status"
+alias gr="git restore"
 
 # Neovim
 alias n="nvim ."
