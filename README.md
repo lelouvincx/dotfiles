@@ -9,10 +9,12 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 ## 🎯 **Features**
 
 - **Neovim Configuration**:
+
   - Modular structure with plugins managed via `lazy.nvim`.
   - Advanced LSP integration (`pyright`, `lua_ls`, etc.).
   - AI-powered suggestions using `copilot.nvim`.
   - Preconfigured plugins for coding, UI enhancements, and more.
+
 - **Shell Customizations**:
 
   - Zsh setup using the `spaceship.zsh` prompt.
@@ -22,15 +24,15 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 
   - Themes and key bindings for `alacritty` and `tmux`.
 
-- **Git Submodules**:
-
-  - Automatically updated via GitHub Actions.
-  - Seamless integration of external repositories.
-
 - **GNU Stow Integration**:
   - Organized, modular configuration management
   - Easy installation with selective module support
   - Simplified dotfiles updates and maintenance
+
+## To Do
+
+- [ ] Make sure all zsh executables are available (cowsay, mise, etc.)
+- [ ] Auto script to install stow, zsh, zimfw, uv, mise, alacritty first before running the install script
 
 ---
 
@@ -44,13 +46,17 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 │   └── .config/
 │       └── alacritty/
 │           └── alacritty.toml
-├── nvim/                         # Neovim-specific configurations
-│   └── .config/
-│       └── nvim/                 # Neovim configuration files
+├── mise/                         # Mise configuration
+│   └── mise/
+│       └── config.toml/
+├── spaceship/                    # Spaceship configuration
+│   └── spaceship.zsh
+├── nvim/                         # Neovim-specific submodule
+│   └── nvim/                     # Neovim configuration files
 ├── tmux/                         # tmux configuration
 │   └── .tmux.conf
 ├── zsh/                          # Zsh configurations
-│   ├── .zimrc
+│   ├── .zimrc                    # Zimrc packages
 │   ├── .zsh/                     # Zsh modules (aliases, env, etc.)
 │   ├── .zshenv
 │   └── .zshrc
@@ -118,11 +124,13 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 
 ### Available Modules
 
+- `zshrc` - ZSH configuration
+- `tmux` - Tmux configuration
 - `alacritty` - Alacritty terminal configuration
 - `nvim` - Neovim configuration
-- `tmux` - Tmux configuration
-- `zsh` - ZSH configuration
 - `local` - Scripts and utilities in `.local/bin`
+- `mise` - Mise configuration
+- `spaceship` - Spaceship configuration
 
 ### Updating
 
@@ -136,7 +144,13 @@ git submodule update --remote --merge
 After updating, rerun the installation script:
 
 ```bash
-./install.sh
+./install.sh <module>
+```
+
+To uninstall a module, run the uninstall script:
+
+```bash
+./uninstall.sh <module>
 ```
 
 ---
@@ -161,21 +175,6 @@ Contributions are welcome! Here's how you can help:
 5. Open a pull request.
 
 Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
----
-
-## 🛠️ **Automation**
-
-### GitHub Actions
-
-- **Submodule Updates**: Automatically keeps submodules in sync with their latest commits.
-- **Release Management**: Uses `release-please` for version tagging and changelogs.
-
----
-
-## 📝 **License**
-
-This repository is licensed under the [MIT License](LICENSE). Feel free to use and adapt these configurations.
 
 ---
 

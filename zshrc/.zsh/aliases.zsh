@@ -49,3 +49,6 @@ if ! $(which gum) &>/dev/null; then
 else
   alias sqlfix="${HOME}/.local/bin/sqlfix.sh"
 fi
+
+# Claude
+alias claude="npx @anthropic-ai/claude-code"

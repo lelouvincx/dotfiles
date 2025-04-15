@@ -52,10 +52,10 @@ modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
 get_target_dir() {
 	local module="$1"
 	case "$module" in
-	"zshrc" | "local" | "spaceship")
+	"zshrc" | "tmux" | "local" | "spaceship")
 		echo "$HOME_DIR"
 		;;
-	"tmux" | "alacritty" | "nvim" | "mise")
+	"alacritty" | "nvim" | "mise")
 		echo "$CONFIG_DIR"
 		;;
 	*)
