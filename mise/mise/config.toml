@@ -3,6 +3,7 @@
 direnv = "latest"
 gcloud = "latest"
 gum = "latest"
+java = "zulu-21.40.17"
 lazydocker = "latest"
 lazygit = "latest"
 neovim = "0.10.4"
