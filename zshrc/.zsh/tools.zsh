@@ -39,3 +39,18 @@ else
   echo "Invalid value for LS_EXECUTABLE. Please set it to either 'lsd' or 'exa'."
   exit 1
 fi
+
+# Install fzf-dbt
+FZF_DBT_PATH=~/.fzf-dbt/fzf-dbt.sh
+if [[ ! -f $FZF_DBT_PATH ]]; then
+    FZF_DBT_DIR=$(dirname $FZF_DBT_PATH)
+    print -P "%F{green}Installing fzf-dbt into $FZF_DBT_DIR%f"
+    mkdir -p $FZF_DBT_DIR
+    command curl -L https://raw.githubusercontent.com/Infused-Insight/fzf-dbt/main/src/fzf_dbt.sh > $FZF_DBT_PATH && \
+        print -P "%F{green}Installation successful.%f" || \
+        print -P "%F{red}The download has failed.%f"
+fi
+
+export FZF_DBT_PREVIEW_CMD="cat {}"
+export FZF_DBT_HEIGHT=80%
+source $FZF_DBT_PATH
