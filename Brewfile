@@ -1,5 +1,6 @@
 tap "netbirdio/tap"
 
+brew "bash-completion"
 brew "bat"
 brew "cowsay"
 brew "fastfetch"
