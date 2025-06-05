@@ -4,6 +4,9 @@
 # Load environment variables
 source ~/.zsh/env.zsh
 
+# Load secret variables
+source ~/.zsh/secrets.zsh
+
 # Load main configurations
 source ~/.zsh/config.zsh
 

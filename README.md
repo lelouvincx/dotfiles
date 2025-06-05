@@ -155,23 +155,37 @@ To uninstall a module, run the uninstall script:
 
 ---
 
+## Important Notes
+
+### Zsh
+
+- There is a file called secrets.zsh in the .zsh directory. This file is not tracked by git, so it is safe to add your secrets to this file. For example, `$OPENAI_API_KEY` or `$ANTHROPIC_API_KEY`
+
+---
+
 ## 🤝 **Contributing**
 
 Contributions are welcome! Here's how you can help:
 
 1. Fork this repository.
 2. Create a feature branch:
-   ```bash
-   git checkout -b feature/your-feature
-   ```
+
+```bash
+git checkout -b feature/your-feature
+```
+
 3. Commit your changes:
-   ```bash
-   git commit -m "feat: add your feature"
-   ```
+
+```bash
+git commit -m "feat: add your feature"
+```
+
 4. Push to the branch:
-   ```bash
-   git push origin feature/your-feature
-   ```
+
+```bash
+git push origin feature/your-feature
+```
+
 5. Open a pull request.
 
 Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
