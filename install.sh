@@ -16,9 +16,34 @@ VERBOSE=0
 CONFIG_DIR="${HOME}/.config"
 HOME_DIR="${HOME}"
 
+# Define modules and their targets
+modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
+
+# Show help message
+show_help() {
+	echo "Usage: $0 [OPTIONS] [MODULES...]"
+	echo ""
+	echo "Install dotfiles using GNU Stow"
+	echo ""
+	echo "Options:"
+	echo "  -h, --help      Show this help message"
+	echo "  -v, --verbose   Enable verbose output"
+	echo ""
+	echo "Available modules:"
+	echo "  ${modules[*]}"
+	echo ""
+	echo "Examples:"
+	echo "  $0                    # Install all modules"
+	echo "  $0 nvim tmux          # Install only nvim and tmux"
+	echo "  $0 -v alacritty       # Install alacritty with verbose output"
+}
+
 # Parse command line arguments
 for arg in "$@"; do
-	if [[ "$arg" == "-v" || "$arg" == "--verbose" ]]; then
+	if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+		show_help
+		exit 0
+	elif [[ "$arg" == "-v" || "$arg" == "--verbose" ]]; then
 		VERBOSE=1
 		# Remove the verbose argument from the arguments list
 		set -- "${@/$arg/}"
@@ -44,9 +69,6 @@ fi
 # Create necessary directories
 mkdir -p "${CONFIG_DIR}"
 mkdir -p "${HOME}/.local/bin"
-
-# Define modules and their targets
-modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
 
 # Get target directory for a module
 get_target_dir() {
@@ -81,12 +103,29 @@ stow_module() {
 	local target_dir=$(get_target_dir "$module_name")
 
 	echo -e "Stowing ${BOLD}${GREEN}$module_name${NC} to target at ${BLUE}${target_dir}${NC}"
-	stow -v -t "$target_dir" "$module_name"
+	if ! stow -v -t "$target_dir" "$module_name" 2>&1; then
+		echo -e "${RED}Error: Stowing module '$module_name' failed${NC}"
+		echo -e "${YELLOW}Try ./install.sh -v to see the error message${NC}"
+		return 1
+	fi
+}
+
+# Show progress
+show_progress() {
+	local current=$1
+	local total=$2
+	local module=$3
+	echo -e "${BOLD}[$current/$total]${NC} Processing ${CYAN}$module${NC}..."
 }
 
 # Stow all modules
 stow_all() {
+	local total=${#modules[@]}
+	local current=0
+
 	for module in "${modules[@]}"; do
+		((current++))
+		show_progress $current $total "$module"
 		stow_module "$module"
 	done
 }
@@ -119,10 +158,15 @@ main() {
 	else
 		debug "Input arguments: $@"
 		# Install specified modules
+		local total=$#
+		local current=0
+
 		for module in "$@"; do
+			((current++))
 			debug "Processing module: $module"
 			if module_exists "$module"; then
 				debug "Module '$module' exists in the list."
+				show_progress $current $total "$module"
 				stow_module "$module"
 			else
 				debug "Module '$module' does not exist in the list."
