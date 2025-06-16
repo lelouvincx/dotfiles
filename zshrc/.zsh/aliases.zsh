@@ -3,7 +3,7 @@
 
 # System aliases
 alias cls="clear"
-alias zshrc="EDITOR=$EDITOR ~/.zshrc"
+alias zshrc="source ~/.zshrc"
 
 # File operations
 alias cat="bat"
