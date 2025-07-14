@@ -8,31 +8,52 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 
 ## 🎯 **Features**
 
-- **Neovim Configuration**:
+### **Terminal Stack**
+- **[Alacritty](https://alacritty.org/)** - GPU-accelerated terminal emulator
+  - JetBrainsMono Nerd Font at 17pt for excellent readability
+  - Catppuccin Latte theme with 90% opacity and blur effects
+  - Optimized for macOS with proper Option key handling
 
-  - Modular structure with plugins managed via `lazy.nvim`.
-  - Advanced LSP integration (`pyright`, `lua_ls`, etc.).
-  - AI-powered suggestions using `copilot.nvim`.
-  - Preconfigured plugins for coding, UI enhancements, and more.
+- **[Tmux](https://github.com/tmux/tmux)** - Terminal multiplexer
+  - Catppuccin Latte theme for visual consistency
+  - Vim-style navigation with smart pane switching
+  - Session persistence via tmux-resurrect and tmux-continuum
+  - Battery status, automatic restore, and yank support
 
-- **Shell Customizations**:
+- **[Zsh](https://www.zsh.org/) + [Spaceship Prompt](https://spaceship-prompt.sh/)**
+  - Modular configuration split into logical components (env, config, tools, aliases, secrets)
+  - [Zim](https://zimfw.sh/) framework for fast startup and plugin management
+  - Auto-suggestions, syntax highlighting, and substring history search
+  - Comprehensive prompt showing git status, language versions, execution time, and more
 
-  - Zsh setup using the `spaceship.zsh` prompt.
-  - Optimized `.zshrc` for aliases, environment variables, and plugins.
+### **Neovim Configuration**
+- LazyVim-based setup with 30+ carefully selected plugins
+- Multiple AI integrations: GitHub Copilot, Supermaven, and Avante
+- Extensive LSP support for 15+ languages
+- Maintained as a [separate repository](https://github.com/lelouvincx/nvim) via git submodule
 
-- **Terminal Configurations**:
+### **Development Tools**
+- **[Mise](https://mise.jdx.dev/)** - Polyglot tool version manager
+  - Manages 17 development tools including Python, Node.js, Rust, Java, and more
+  - Replaces asdf with better performance and features
 
-  - Themes and key bindings for `alacritty` and `tmux`.
+- **Modern CLI Replacements**
+  - `lsd` → `ls` (with icons and git integration)
+  - `bat` → `cat` (with syntax highlighting)
+  - `zoxide` → `cd` (smart directory jumping)
+  - `lazygit` & `lazydocker` for TUI git/docker management
 
-- **GNU Stow Integration**:
-  - Organized, modular configuration management
-  - Easy installation with selective module support
-  - Simplified dotfiles updates and maintenance
+### **GNU Stow Integration**
+- Organized, modular configuration management
+- Easy installation with selective module support
+- Clean separation between home and config directory targets
 
-## To Do
+## 📋 **To Do**
 
-- [ ] Make sure all zsh executables are available (cowsay, mise, etc.)
-- [ ] Auto script to install stow, zsh, zimfw, uv, mise, alacritty first before running the install script
+- [ ] Create bootstrap script to install prerequisites (Homebrew, Stow, Zsh, Zimfw, Mise, Alacritty)
+- [ ] Add automatic Zim framework installation if not present
+- [ ] Ensure all CLI tools are available via Mise or package managers
+- [ ] Add health check script to verify all dependencies
 
 ---
 
@@ -55,9 +76,14 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 │   └── nvim/                     # Neovim configuration files
 ├── tmux/                         # tmux configuration
 │   └── .tmux.conf
-├── zsh/                          # Zsh configurations
-│   ├── .zimrc                    # Zimrc packages
-│   ├── .zsh/                     # Zsh modules (aliases, env, etc.)
+├── zshrc/                        # Zsh configurations
+│   ├── .zimrc                    # Zim framework packages
+│   ├── .zsh/                     # Modular Zsh configs
+│   │   ├── aliases.zsh           # Command aliases
+│   │   ├── config.zsh            # Main Zsh settings
+│   │   ├── env.zsh               # Environment variables
+│   │   ├── tools.zsh             # Tool integrations
+│   │   └── secrets.zsh           # Git-ignored secrets
 │   ├── .zshenv
 │   └── .zshrc
 ├── local/                        # Local scripts and utilities
@@ -76,12 +102,12 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 
 ### Prerequisites
 
-- **Git**: For managing and cloning the repository.
-- **GNU Stow**: For managing symlinks to dotfiles.
-- **Neovim**: Latest version is recommended.
-- **Zsh**: Preferred shell environment.
-- **Tmux**: For terminal multiplexing.
-- **Alacritty**: Terminal emulator.
+- **Git**: For managing and cloning the repository
+- **GNU Stow**: For managing symlinks to dotfiles
+- **Zsh**: Shell environment with Zim framework
+- **Alacritty**: GPU-accelerated terminal emulator
+- **Tmux**: Terminal multiplexer
+- **Mise**: Tool version manager (will install other tools)
 
 ### Installation
 
@@ -124,13 +150,13 @@ Welcome to my **dotfiles** repository! This project serves as a central hub for 
 
 ### Available Modules
 
-- `zshrc` - ZSH configuration
-- `tmux` - Tmux configuration
-- `alacritty` - Alacritty terminal configuration
-- `nvim` - Neovim configuration
+- `zshrc` - Zsh configuration with modular setup (env, config, tools, aliases)
+- `tmux` - Tmux configuration with Catppuccin theme and plugins
+- `alacritty` - Alacritty terminal configuration with Catppuccin Latte theme
+- `nvim` - Neovim configuration (LazyVim-based, maintained as submodule)
 - `local` - Scripts and utilities in `.local/bin`
-- `mise` - Mise configuration
-- `spaceship` - Spaceship configuration
+- `mise` - Mise tool version manager configuration
+- `spaceship` - Spaceship prompt configuration for Zsh
 
 ### Updating
 
@@ -157,9 +183,13 @@ To uninstall a module, run the uninstall script:
 
 ## Important Notes
 
-### Zsh
+### Environment Configuration
 
-- There is a file called secrets.zsh in the .zsh directory. This file is not tracked by git, so it is safe to add your secrets to this file. For example, `$OPENAI_API_KEY` or `$ANTHROPIC_API_KEY`
+- **Secrets Management**: The `.zsh/secrets.zsh` file is git-ignored for storing sensitive environment variables (API keys, tokens, etc.)
+- **Tool Selection**: Configure your preferred tools via environment variables in `.zsh/env.zsh`:
+  - `LS_EXECUTABLE`: Choose between `lsd` or `exa`
+  - `LANGUAGE_EXECUTABLE`: Choose between `mise` or `asdf`
+- **Color Scheme**: Unified Catppuccin Latte theme across Alacritty, Tmux, and Neovim for visual consistency
 
 ---
 
