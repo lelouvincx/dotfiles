@@ -42,7 +42,7 @@ if ! command -v stow &>/dev/null; then
 fi
 
 # Define modules
-modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
+modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship" "bat")
 
 # Get target directory for a module
 get_target_dir() {
@@ -51,7 +51,7 @@ get_target_dir() {
 	"zshrc" | "tmux" | "local" | "spaceship")
 		echo "$HOME_DIR"
 		;;
-	"alacritty" | "nvim" | "mise")
+	"alacritty" | "nvim" | "mise" | "bat")
 		echo "$CONFIG_DIR"
 		;;
 	*)

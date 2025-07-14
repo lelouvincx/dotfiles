@@ -17,7 +17,7 @@ CONFIG_DIR="${HOME}/.config"
 HOME_DIR="${HOME}"
 
 # Define modules and their targets
-modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship")
+modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship" "bat")
 
 # Show help message
 show_help() {
@@ -77,7 +77,7 @@ get_target_dir() {
 	"zshrc" | "tmux" | "local" | "spaceship")
 		echo "$HOME_DIR"
 		;;
-	"alacritty" | "nvim" | "mise")
+	"alacritty" | "nvim" | "mise" | "bat")
 		echo "$CONFIG_DIR"
 		;;
 	*)
