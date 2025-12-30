@@ -51,3 +51,6 @@ fi
 
 # Claude
 alias claude="npx @anthropic-ai/claude-code"
+
+# Pnpm
+alias pn="pnpm"
