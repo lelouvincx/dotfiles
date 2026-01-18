@@ -19,8 +19,3 @@ source ~/.zsh/aliases.zsh
 # Display greeting
 cowsay -f tux "Hello lelouvincx!"
 
-# Added by dbt installer
-export PATH="$PATH:/Users/lelouvincx/.local/bin"
-
-# dbt aliases
-alias dbtf=/Users/lelouvincx/.local/bin/dbt
