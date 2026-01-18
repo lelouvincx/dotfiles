@@ -1,7 +1,7 @@
 # bat configuration file
 
 # Set the theme to Catppuccin Latte
---theme="Catppuccin Latte"
+--theme="Catppuccin Mocha"
 
 # Show line numbers, Git modifications and file header
 --style="numbers,changes,header"
