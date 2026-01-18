@@ -103,7 +103,7 @@ stow_module() {
 	local target_dir=$(get_target_dir "$module_name")
 
 	echo -e "Stowing ${BOLD}${GREEN}$module_name${NC} to target at ${BLUE}${target_dir}${NC}"
-	if ! stow -v -t "$target_dir" "$module_name" 2>&1; then
+	if ! stow -R -v -t "$target_dir" "$module_name" 2>&1; then
 		echo -e "${RED}Error: Stowing module '$module_name' failed${NC}"
 		echo -e "${YELLOW}Try ./install.sh -v to see the error message${NC}"
 		return 1
