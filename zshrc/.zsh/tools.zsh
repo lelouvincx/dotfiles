@@ -12,7 +12,7 @@ elif [[ "$LANGUAGE_EXECUTABLE" == "mise" ]]; then
   eval "$($HOME/.local/bin/mise activate zsh)"
 else
   echo "Invalid value for LANGUAGE_EXECUTABLE. Please set it to either 'asdf' or 'mise'."
-  exit 1
+  return 1
 fi
 
 # Zoxide initialization
@@ -37,7 +37,7 @@ elif [[ "$LS_EXECUTABLE" == "exa" ]]; then
   alias lt="exa -T -L 2"
 else
   echo "Invalid value for LS_EXECUTABLE. Please set it to either 'lsd' or 'exa'."
-  exit 1
+  return 1
 fi
 
 # Install fzf-dbt

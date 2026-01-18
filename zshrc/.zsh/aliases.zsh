@@ -43,6 +43,7 @@ alias sqlfluff="uvx sqlfluff"
 alias f="fastfetch -c examples/12.jsonc"
 
 # Configure sqlfix executable
+# Prefer gum version if available
 if ! $(which gum) &>/dev/null; then
   alias sqlfix="${HOME}/.local/bin/sqlfix-gum.sh"
 else
