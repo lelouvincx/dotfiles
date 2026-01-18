@@ -1,4 +1,4 @@
-# lelouvincx's dotfiles 🚀
+# lelouvincx's dotfiles
 
 [![Auto Update Submodules](https://github.com/lelouvincx/dotfiles/actions/workflows/update-submodule.yaml/badge.svg?branch=main)](https://github.com/lelouvincx/dotfiles/actions/workflows/update-submodule.yaml)
 
@@ -25,8 +25,16 @@ https://github.com/lelouvincx/nvim
 
 - [ ] Create bootstrap script to install prerequisites (Homebrew, Stow, Zsh, Zimfw, Mise, Alacritty)
 - [ ] Add automatic Zim framework installation if not present
-- [ ] Ensure all CLI tools are available via Mise or package managers
+- [ ] Ensure all CLI tools are available via mise or brew
 - [ ] Add health check script to verify all dependencies
+- [ ] Extract shared code between install.sh and uninstall.sh into `lib/common.sh`
+- [ ] Remove empty `scripts/` directory or add `.gitkeep`
+- [ ] Fix README structure docs (alacritty path, add bat module)
+- [ ] Add `--adopt` option to install.sh for conflict resolution
+- [ ] Configure HISTSIZE/SAVEHIST in zsh config
+- [ ] Add Makefile for common tasks (install, uninstall, update, check)
+- [ ] Add shellcheck GitHub workflow to lint shell scripts
+- [ ] Fix sqlfix.sh to use `uvx sqlfluff` instead of direct `sqlfluff` call
 
 ## Repository Structure
 
