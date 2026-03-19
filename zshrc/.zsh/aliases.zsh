@@ -6,7 +6,7 @@ alias cls="clear"
 alias zshrc="source ~/.zshrc"
 
 # File operations
-alias cat="bat"
+alias cat='bat --theme="Catppuccin Mocha"'
 
 # Tmux
 alias ta="TERM=screen-256color tmux attach"
@@ -55,3 +55,6 @@ alias claude="npx @anthropic-ai/claude-code"
 
 # Pnpm
 alias pn="pnpm"
+
+# Opencode
+alias oc="opencode"
