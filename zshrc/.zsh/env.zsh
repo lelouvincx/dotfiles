@@ -15,4 +15,4 @@ export LANGUAGE_EXECUTABLE=mise # either asdf or mise
 export SPACESHIP_CONFIG="${HOME}/spaceship.zsh"
 
 # Ampcode and opencode
-export PATH="/Users/lelouvincx/.local/bin:/Users/lelouvincx/.amp/bin:/Users/lelouvincx/.opencode/bin:$PATH"
+export PATH="/Users/lelouvincx/.local/bin:/Users/lelouvincx/.amp/bin:/Users/lelouvincx/.opencode/bin:/Users/lelouvincx/.holistics/bin:$PATH"
