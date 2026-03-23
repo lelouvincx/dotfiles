@@ -30,6 +30,8 @@ alias speedtest="docker run -ti --rm --init --net host --name speedtest huss4in7
 alias lz="lazygit"
 alias c="uvx --from commitizen cz c"
 alias gs="git status"
+alias gd="git diff"
+alias gl="git log --oneline --graph --decorate"
 
 # Neovim
 alias n="nvim ."
@@ -58,3 +60,9 @@ alias pn="pnpm"
 
 # Opencode
 alias oc="opencode"
+
+# Ampcode
+alias a="amp"
+
+# Uptime
+alias u="uptime"
