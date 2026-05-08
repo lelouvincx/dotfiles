@@ -28,7 +28,6 @@ alias speedtest="docker run -ti --rm --init --net host --name speedtest huss4in7
 
 # Git tools
 alias lz="lazygit"
-alias c="uvx --from commitizen cz c"
 alias gs="git status"
 alias gd="git diff"
 alias gl="git log --oneline --graph --decorate"
@@ -63,6 +62,8 @@ alias oc="opencode"
 
 # Ampcode
 alias a="amp"
+alias atc="amp threads continue"
+alias atr="amp threads rename"
 
 # Uptime
 alias u="uptime"
