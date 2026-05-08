@@ -4,11 +4,11 @@
 
 ## Stack
 
-- **Alacritty** — GPU terminal
-- **Tmux** — multiplexer
-- **Zsh + Zim + Spaceship** — shell, framework, prompt
-- **Neovim** — [lelouvincx/nvim](https://github.com/lelouvincx/nvim)
-- **Mise** — tool version mgr
+- **Alacritty**: terminal
+- **Tmux**: multiplexer
+- **Zsh + Zim + Spaceship**: shell, framework, prompt
+- **Neovim**: [lelouvincx/nvim](https://github.com/lelouvincx/nvim)
+- **Mise**: tool version mgr
 
 ## Install
 
