@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# r2up - Upload files to Cloudflare R2 bucket "secondbrain"
+# Files are stored at r2:secondbrain/YYYY/MM/<md5>.<ext>
+# Prints (and copies to clipboard on macOS) the public URL.
+#
+# Requires: rclone configured with remote "r2" pointing to Cloudflare R2.
+# Usage: r2up <file> [<file>...]
+
+set -e
+
+BASE_URL="https://media.secondbrain.lelouvincx.com"
+REMOTE="r2:secondbrain"
+
+print_usage() {
+	echo "Usage: r2up <file> [<file>...]"
+	echo "Uploads files to Cloudflare R2 and prints the public URL."
+}
+
+md5_hash() {
+	if command -v md5 >/dev/null 2>&1; then
+		md5 -q "$1"
+	elif command -v md5sum >/dev/null 2>&1; then
+		md5sum "$1" | awk '{print $1}'
+	else
+		echo "error: no md5/md5sum found" >&2
+		exit 1
+	fi
+}
+
+if [ $# -eq 0 ]; then
+	print_usage
+	exit 1
+fi
+
+if ! command -v rclone >/dev/null 2>&1; then
+	echo "error: rclone not installed" >&2
+	exit 1
+fi
+
+YM="$(date +%Y)/$(date +%m)"
+DEST="$REMOTE/$YM"
+
+for src in "$@"; do
+	if [ ! -f "$src" ]; then
+		echo "skip (not a file): $src" >&2
+		continue
+	fi
+
+	ext="${src##*.}"
+	hash="$(md5_hash "$src")"
+	name="${hash}.${ext}"
+
+	rclone copyto "$src" "$DEST/$name" -P
+
+	url="$BASE_URL/$YM/$name"
+	echo "$url"
+
+	if command -v pbcopy >/dev/null 2>&1; then
+		printf '%s' "$url" | pbcopy
+		echo "  (copied to clipboard)"
+	fi
+done
