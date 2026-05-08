@@ -1,0 +1,545 @@
+#!/usr/bin/env bash
+# yt-transcript - Extract YouTube video transcript with chapter markers
+# Usage: yt-transcript [OPTIONS] <youtube-url>
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Default values
+FORMAT="text"
+LANG="en"
+OUTPUT=""
+INCLUDE_CHAPTERS=true
+UPLOAD=false
+
+usage() {
+    cat << EOF
+Usage: yt-transcript [OPTIONS] <youtube-url>
+
+Extract transcript from YouTube video with chapter markers.
+
+Options:
+  -f, --format FORMAT    Output format: text|markdown|json (default: text)
+  -l, --lang LANG        Subtitle language code (default: en)
+  -o, --output FILE      Output file (default: stdout)
+  -n, --no-chapters      Exclude chapter markers
+  -u, --upload           Upload to R2 and return public URL
+  -h, --help             Show this help message
+
+Examples:
+  yt-transcript "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  yt-transcript -f markdown -o transcript.md "https://youtu.be/VIDEO_ID"
+  yt-transcript -l vi --format json "https://youtube.com/watch?v=VIDEO_ID"
+  yt-transcript -u "https://youtube.com/watch?v=VIDEO_ID"  # Upload to R2
+
+Dependencies:
+  - uv: Python package manager (already in mise)
+  - jq: JSON processor (brew install jq)
+  - aws: AWS CLI for R2 upload (already in mise)
+
+Environment variables for R2 upload (-u):
+  R2_ENDPOINT_URL, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_URL
+
+Note: yt-dlp is run via uvx (no separate installation needed)
+EOF
+}
+
+error() {
+    echo -e "${RED}Error: $1${NC}" >&2
+    exit 1
+}
+
+info() {
+    echo -e "${BLUE}$1${NC}" >&2
+}
+
+warn() {
+    echo -e "${YELLOW}$1${NC}" >&2
+}
+
+success() {
+    echo -e "${GREEN}$1${NC}" >&2
+}
+
+# Check dependencies
+check_deps() {
+    if ! command -v uvx &> /dev/null; then
+        error "uvx is not installed. Install uv first: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    fi
+    if ! command -v jq &> /dev/null; then
+        error "jq is not installed. Install with: brew install jq"
+    fi
+}
+
+# Check R2 dependencies
+check_r2_deps() {
+    if ! command -v aws &> /dev/null; then
+        error "aws CLI is not installed. Install with: mise install aws"
+    fi
+    if [[ -z "${R2_ENDPOINT_URL:-}" ]]; then
+        error "R2_ENDPOINT_URL is not set. Add it to ~/.zsh/secrets.zsh"
+    fi
+    if [[ -z "${R2_ACCESS_KEY_ID:-}" ]]; then
+        error "R2_ACCESS_KEY_ID is not set. Add it to ~/.zsh/secrets.zsh"
+    fi
+    if [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
+        error "R2_SECRET_ACCESS_KEY is not set. Add it to ~/.zsh/secrets.zsh"
+    fi
+    if [[ -z "${R2_BUCKET:-}" ]]; then
+        error "R2_BUCKET is not set. Add it to ~/.zsh/secrets.zsh"
+    fi
+    if [[ -z "${R2_PUBLIC_URL:-}" ]]; then
+        error "R2_PUBLIC_URL is not set. Add it to ~/.zsh/secrets.zsh"
+    fi
+}
+
+# Upload file to R2 and return public URL
+upload_to_r2() {
+    local file_path="$1"
+    local video_id="$2"
+    local ext="$3"
+
+    # Generate S3 key: YYYY/MM/yt-{video_id}.{ext}
+    local year month s3_key
+    year=$(date +%Y)
+    month=$(date +%m)
+    s3_key="${year}/${month}/yt-${video_id}.${ext}"
+
+    info "Uploading to R2: ${s3_key}"
+
+    if ! AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
+         AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
+         AWS_DEFAULT_REGION="auto" \
+         aws s3 cp "$file_path" "s3://${R2_BUCKET}/${s3_key}" \
+             --endpoint-url "$R2_ENDPOINT_URL" \
+             --quiet; then
+        error "Failed to upload to R2"
+    fi
+
+    # Return public URL
+    echo "${R2_PUBLIC_URL}/${s3_key}"
+}
+
+# Parse timestamp from VTT format (HH:MM:SS.mmm) to seconds
+parse_timestamp() {
+    local ts="$1"
+    local hours minutes seconds
+
+    # Handle both HH:MM:SS.mmm and MM:SS.mmm formats
+    if [[ "$ts" =~ ^([0-9]+):([0-9]+):([0-9.]+)$ ]]; then
+        hours="${BASH_REMATCH[1]}"
+        minutes="${BASH_REMATCH[2]}"
+        seconds="${BASH_REMATCH[3]}"
+    elif [[ "$ts" =~ ^([0-9]+):([0-9.]+)$ ]]; then
+        hours=0
+        minutes="${BASH_REMATCH[1]}"
+        seconds="${BASH_REMATCH[2]}"
+    else
+        echo "0"
+        return
+    fi
+
+    # Convert to seconds (integer), use 10# to force base-10 (avoid octal interpretation of 08, 09)
+    local secs_int="${seconds%.*}"
+    echo "$((10#$hours * 3600 + 10#$minutes * 60 + 10#$secs_int))"
+}
+
+# Format seconds to HH:MM:SS
+format_time() {
+    local total_seconds="$1"
+    local hours=$((total_seconds / 3600))
+    local minutes=$(((total_seconds % 3600) / 60))
+    local seconds=$((total_seconds % 60))
+    printf "%02d:%02d:%02d" "$hours" "$minutes" "$seconds"
+}
+
+# Extract video ID from URL
+extract_video_id() {
+    local url="$1"
+    local video_id=""
+
+    # Handle various YouTube URL formats
+    if [[ "$url" =~ youtube\.com/watch\?.*v=([a-zA-Z0-9_-]{11}) ]]; then
+        video_id="${BASH_REMATCH[1]}"
+    elif [[ "$url" =~ youtu\.be/([a-zA-Z0-9_-]{11}) ]]; then
+        video_id="${BASH_REMATCH[1]}"
+    elif [[ "$url" =~ youtube\.com/embed/([a-zA-Z0-9_-]{11}) ]]; then
+        video_id="${BASH_REMATCH[1]}"
+    elif [[ "$url" =~ youtube\.com/v/([a-zA-Z0-9_-]{11}) ]]; then
+        video_id="${BASH_REMATCH[1]}"
+    elif [[ "$url" =~ ^([a-zA-Z0-9_-]{11})$ ]]; then
+        video_id="$url"
+    fi
+
+    echo "$video_id"
+}
+
+# Main extraction function
+extract_transcript() {
+    local url="$1"
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    trap "rm -rf $tmp_dir" EXIT
+
+    local video_id
+    video_id=$(extract_video_id "$url")
+
+    if [[ -z "$video_id" ]]; then
+        error "Could not extract video ID from URL: $url"
+    fi
+
+    info "Extracting transcript for video: $video_id"
+
+    # Download metadata (includes chapters) and subtitles
+    info "Fetching video metadata..."
+    if ! uvx yt-dlp \
+        --write-info-json \
+        --write-auto-subs \
+        --write-subs \
+        --sub-langs "$LANG" \
+        --sub-format vtt \
+        --skip-download \
+        --no-warnings \
+        --quiet \
+        --no-progress \
+        -o "$tmp_dir/%(id)s" \
+        "$url" >/dev/null 2>&1; then
+        error "Failed to fetch video data. Check the URL and try again."
+    fi
+
+    # Find the info JSON file
+    local info_file="$tmp_dir/${video_id}.info.json"
+    if [[ ! -f "$info_file" ]]; then
+        error "Could not fetch video metadata"
+    fi
+
+    # Get video title
+    local title
+    title=$(jq -r '.title // "Unknown Title"' "$info_file")
+    info "Video: $title"
+
+    # Find subtitle file (prefer manual subs over auto-generated)
+    local sub_file=""
+    for pattern in "$tmp_dir/${video_id}.${LANG}.vtt" "$tmp_dir/${video_id}.${LANG}"*.vtt; do
+        if [[ -f "$pattern" ]]; then
+            sub_file="$pattern"
+            break
+        fi
+    done
+
+    if [[ -z "$sub_file" || ! -f "$sub_file" ]]; then
+        error "No subtitles found for language: $LANG. Try a different language with -l option."
+    fi
+
+    # Extract chapters
+    local chapters_json
+    chapters_json=$(jq -c '.chapters // []' "$info_file")
+    local num_chapters
+    num_chapters=$(echo "$chapters_json" | jq 'length')
+
+    if [[ "$num_chapters" -gt 0 && "$INCLUDE_CHAPTERS" == true ]]; then
+        info "Found $num_chapters chapters"
+    fi
+
+    # Parse VTT and merge with chapters
+    local output=""
+    local current_chapter_idx=0
+    local last_text=""
+
+    # Build chapter lookup array
+    declare -a chapter_starts=()
+    declare -a chapter_titles=()
+
+    if [[ "$INCLUDE_CHAPTERS" == true && "$num_chapters" -gt 0 ]]; then
+        while IFS= read -r line; do
+            local start_time title
+            start_time=$(echo "$line" | jq -r '.start_time | floor')
+            title=$(echo "$line" | jq -r '.title')
+            chapter_starts+=("$start_time")
+            chapter_titles+=("$title")
+        done < <(echo "$chapters_json" | jq -c '.[]')
+    fi
+
+    # Parse VTT file
+    local in_cue=false
+    local current_time=0
+    local transcript_lines=()
+    local transcript_times=()
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip WEBVTT header and empty lines
+        if [[ "$line" =~ ^WEBVTT || "$line" =~ ^Kind: || "$line" =~ ^Language: || -z "$line" ]]; then
+            continue
+        fi
+
+        # Check for timestamp line (VTT uses --> with two dashes)
+        if [[ "$line" =~ ^([0-9:.]+)[[:space:]]+--\>[[:space:]]+([0-9:.]+) ]]; then
+            current_time=$(parse_timestamp "${BASH_REMATCH[1]}")
+            in_cue=true
+            continue
+        fi
+
+        # Skip cue identifiers (numeric lines before timestamps)
+        if [[ "$line" =~ ^[0-9]+$ ]]; then
+            continue
+        fi
+
+        # Process subtitle text
+        if [[ "$in_cue" == true && -n "$line" ]]; then
+            # Remove VTT tags like <c> </c> and timing tags, trim whitespace
+            local clean_line
+            clean_line=$(echo "$line" | sed -E 's/<[^>]+>//g' | sed 's/&nbsp;/ /g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+            # Skip duplicate lines (VTT often repeats)
+            if [[ -n "$clean_line" && "$clean_line" != "$last_text" ]]; then
+                transcript_lines+=("$clean_line")
+                transcript_times+=("$current_time")
+                last_text="$clean_line"
+            fi
+            in_cue=false
+        fi
+    done < "$sub_file"
+
+    # Generate output based on format
+    case "$FORMAT" in
+        text)
+            output_text "$title" "${transcript_lines[@]}"
+            ;;
+        markdown)
+            output_markdown "$title" "${transcript_lines[@]}"
+            ;;
+        json)
+            output_json "$title" "$info_file" "${transcript_lines[@]}"
+            ;;
+        *)
+            error "Unknown format: $FORMAT"
+            ;;
+    esac
+}
+
+# Output as plain text
+output_text() {
+    local title="$1"
+    shift
+    local lines=("$@")
+
+    echo "=========================================="
+    echo "$title"
+    echo "=========================================="
+    echo ""
+
+    local current_chapter_idx=0
+    local next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
+
+    for i in "${!lines[@]}"; do
+        local line="${lines[$i]}"
+        local time="${transcript_times[$i]}"
+
+        # Insert chapter header if we've reached it
+        while [[ "$current_chapter_idx" -lt "${#chapter_starts[@]}" && "$time" -ge "$next_chapter_time" ]]; do
+            echo ""
+            echo "[$(format_time "$next_chapter_time")] --- ${chapter_titles[$current_chapter_idx]} ---"
+            echo ""
+            ((current_chapter_idx++))
+            next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
+        done
+
+        echo "$line"
+    done
+}
+
+# Output as Markdown
+output_markdown() {
+    local title="$1"
+    shift
+    local lines=("$@")
+
+    echo "# $title"
+    echo ""
+
+    local current_chapter_idx=0
+    local next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
+    local in_chapter=false
+
+    for i in "${!lines[@]}"; do
+        local line="${lines[$i]}"
+        local time="${transcript_times[$i]}"
+
+        # Insert chapter header if we've reached it
+        while [[ "$current_chapter_idx" -lt "${#chapter_starts[@]}" && "$time" -ge "$next_chapter_time" ]]; do
+            if [[ "$in_chapter" == true ]]; then
+                echo ""
+            fi
+            echo "## ${chapter_titles[$current_chapter_idx]} ($(format_time "$next_chapter_time"))"
+            echo ""
+            in_chapter=true
+            ((current_chapter_idx++))
+            next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
+        done
+
+        echo "$line"
+    done
+}
+
+# Output as JSON
+output_json() {
+    local title="$1"
+    local info_file="$2"
+    shift 2
+    local lines=("$@")
+
+    local video_id duration
+    video_id=$(jq -r '.id' "$info_file")
+    duration=$(jq -r '.duration // 0' "$info_file")
+
+    # Build segments with chapters
+    local segments="[]"
+    local current_chapter=""
+    local current_chapter_idx=0
+    local next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
+
+    for i in "${!lines[@]}"; do
+        local line="${lines[$i]}"
+        local time="${transcript_times[$i]}"
+
+        # Update current chapter
+        while [[ "$current_chapter_idx" -lt "${#chapter_starts[@]}" && "$time" -ge "$next_chapter_time" ]]; do
+            current_chapter="${chapter_titles[$current_chapter_idx]}"
+            ((current_chapter_idx++))
+            next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
+        done
+
+        # Add segment
+        local segment
+        segment=$(jq -n \
+            --arg text "$line" \
+            --argjson time "$time" \
+            --arg chapter "$current_chapter" \
+            '{text: $text, start_time: $time, chapter: $chapter}')
+        segments=$(echo "$segments" | jq --argjson seg "$segment" '. + [$seg]')
+    done
+
+    # Build chapters array
+    local chapters_arr="[]"
+    for i in "${!chapter_starts[@]}"; do
+        local ch
+        ch=$(jq -n \
+            --arg title "${chapter_titles[$i]}" \
+            --argjson start "${chapter_starts[$i]}" \
+            '{title: $title, start_time: $start}')
+        chapters_arr=$(echo "$chapters_arr" | jq --argjson ch "$ch" '. + [$ch]')
+    done
+
+    # Output final JSON
+    jq -n \
+        --arg title "$title" \
+        --arg video_id "$video_id" \
+        --argjson duration "$duration" \
+        --argjson chapters "$chapters_arr" \
+        --argjson segments "$segments" \
+        '{
+            title: $title,
+            video_id: $video_id,
+            duration: $duration,
+            chapters: $chapters,
+            segments: $segments
+        }'
+}
+
+# Parse command line arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -f|--format)
+                FORMAT="$2"
+                if [[ ! "$FORMAT" =~ ^(text|markdown|json)$ ]]; then
+                    error "Invalid format: $FORMAT. Use text, markdown, or json."
+                fi
+                shift 2
+                ;;
+            -l|--lang)
+                LANG="$2"
+                shift 2
+                ;;
+            -o|--output)
+                OUTPUT="$2"
+                shift 2
+                ;;
+            -n|--no-chapters)
+                INCLUDE_CHAPTERS=false
+                shift
+                ;;
+            -u|--upload)
+                UPLOAD=true
+                shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -*)
+                error "Unknown option: $1"
+                ;;
+            *)
+                URL="$1"
+                shift
+                ;;
+        esac
+    done
+
+    if [[ -z "${URL:-}" ]]; then
+        error "YouTube URL is required. Use -h for help."
+    fi
+}
+
+# Main
+main() {
+    check_deps
+    parse_args "$@"
+
+    # Check R2 deps if uploading
+    if [[ "$UPLOAD" == true ]]; then
+        check_r2_deps
+    fi
+
+    # Determine file extension based on format
+    local ext
+    case "$FORMAT" in
+        text) ext="txt" ;;
+        markdown) ext="md" ;;
+        json) ext="json" ;;
+    esac
+
+    if [[ "$UPLOAD" == true ]]; then
+        # Extract video ID for filename
+        local video_id
+        video_id=$(extract_video_id "$URL")
+        if [[ -z "$video_id" ]]; then
+            error "Could not extract video ID from URL: $URL"
+        fi
+
+        # Save to temp file (predictable path, overwrite if exists)
+        local tmp_file="/tmp/yt-transcript-${video_id}.${ext}"
+        trap "rm -f $tmp_file" EXIT
+
+        extract_transcript "$URL" > "$tmp_file"
+
+        local public_url
+        public_url=$(upload_to_r2 "$tmp_file" "$video_id" "$ext")
+        success "Uploaded to R2"
+        echo "$public_url"
+    elif [[ -n "$OUTPUT" ]]; then
+        extract_transcript "$URL" > "$OUTPUT"
+        success "Transcript saved to: $OUTPUT"
+    else
+        extract_transcript "$URL"
+    fi
+}
+
+main "$@"

@@ -18,4 +18,3 @@ source ~/.zsh/aliases.zsh
 
 # Display greeting
 cowsay -f tux "Hello lelouvincx!"
-

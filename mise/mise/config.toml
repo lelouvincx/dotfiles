@@ -1,6 +1,7 @@
 [tools]
 1password-cli = "latest"
 aws = "latest"
+bun = "latest"
 claude = "2.0.71"
 direnv = "latest"
 gcloud = "latest"
