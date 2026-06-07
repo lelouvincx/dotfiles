@@ -14,7 +14,8 @@ export LANGUAGE_EXECUTABLE=mise # either asdf or mise
 # Spaceship prompt config
 export SPACESHIP_CONFIG="${HOME}/spaceship.zsh"
 
-# Ampcode and opencode
+# Path extension
 export PATH="/Users/lelouvincx/.local/bin:/Users/lelouvincx/.amp/bin:/Users/lelouvincx/.opencode/bin:/Users/lelouvincx/.holistics/bin:$PATH"
 
+# Amp plugin env
 export PLUGINS=all
