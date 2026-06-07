@@ -67,3 +67,6 @@ alias atr="amp threads rename"
 
 # Uptime
 alias u="uptime"
+
+# Holistics
+alias h="holistics"
