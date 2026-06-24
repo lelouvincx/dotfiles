@@ -1,75 +1,75 @@
 [general]
 live_config_reload = true
 
-# --- Catppuccin Mocha Theme Start ---
+# --- Dracula Theme Start ---
 
 [colors.primary]
-background = "#1e1e2e"
-foreground = "#cdd6f4"
-dim_foreground = "#7f849c"
-bright_foreground = "#cdd6f4"
+background = "#282a36"
+foreground = "#f8f8f2"
+dim_foreground = "#6272a4"
+bright_foreground = "#ffffff"
 
 [colors.cursor]
-text = "#1e1e2e"
-cursor = "#f5e0dc"
+text = "#282a36"
+cursor = "#f8f8f2"
 
 [colors.vi_mode_cursor]
-text = "#1e1e2e"
-cursor = "#b4befe"
+text = "#282a36"
+cursor = "#8be9fd"
 
 [colors.search.matches]
-foreground = "#1e1e2e"
-background = "#a6adc8"
+foreground = "#f8f8f2"
+background = "#44475a"
 
 [colors.search.focused_match]
-foreground = "#1e1e2e"
-background = "#a6e3a1"
+foreground = "#282a36"
+background = "#ffb86c"
 
 [colors.footer_bar]
-foreground = "#1e1e2e"
-background = "#a6adc8"
+foreground = "#f8f8f2"
+background = "#44475a"
 
 [colors.hints.start]
-foreground = "#1e1e2e"
-background = "#f9e2af"
+foreground = "#282a36"
+background = "#f1fa8c"
 
 [colors.hints.end]
-foreground = "#1e1e2e"
-background = "#a6adc8"
+foreground = "#f8f8f2"
+background = "#44475a"
 
 [colors.selection]
-text = "#1e1e2e"
-background = "#f5e0dc"
+text = "#f8f8f2"
+background = "#44475a"
 
 [colors.normal]
-black = "#45475a"
-red = "#f38ba8"
-green = "#a6e3a1"
-yellow = "#f9e2af"
-blue = "#89b4fa"
-magenta = "#f5c2e7"
-cyan = "#94e2d5"
-white = "#bac2de"
+black = "#000000"
+red = "#ff5555"
+green = "#50fa7b"
+yellow = "#f1fa8c"
+blue = "#bd93f9"
+magenta = "#ff79c6"
+cyan = "#8be9fd"
+white = "#bbbbbb"
 
 [colors.bright]
-black = "#585b70"
-red = "#f38ba8"
-green = "#a6e3a1"
-yellow = "#f9e2af"
-blue = "#89b4fa"
-magenta = "#f5c2e7"
-cyan = "#94e2d5"
-white = "#a6adc8"
+black = "#555555"
+red = "#ff5555"
+green = "#50fa7b"
+yellow = "#f1fa8c"
+blue = "#caa9fa"
+magenta = "#ff79c6"
+cyan = "#8be9fd"
+white = "#ffffff"
 
 [[colors.indexed_colors]]
 index = 16
-color = "#fab387"
+color = "#ffb86c"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#f5e0dc"
+color = "#ff5555"
 
-# --- Catppuccin Mocha Theme End ---
+# --- Dracula Theme End ---
 
 [cursor]
 style.shape = "Block"
