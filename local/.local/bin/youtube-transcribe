@@ -1,0 +1,352 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_NAME="$(basename "$0")"
+MODEL="${OPENROUTER_TRANSCRIBE_MODEL:-openai/gpt-4o-transcribe}"
+LANGUAGE="${OPENROUTER_TRANSCRIBE_LANGUAGE:-}"
+CHUNK_SECONDS="${YOUTUBE_TRANSCRIBE_CHUNK_SECONDS:-300}"
+FORMAT="md"
+OUTPUT=""
+KEEP_TEMP=false
+INPUT=""
+OPENROUTER_BASE_URL="${OPENROUTER_BASE_URL:-https://openrouter.ai}"
+CREDENTIALS_FILE="${OPENROUTER_CREDENTIALS_FILE:-$HOME/.credentials/openrouter.env}"
+
+usage() {
+  cat <<EOF
+Usage: $SCRIPT_NAME [options] <youtube-url-or-video-id>
+
+Transcribe a YouTube video's audio with OpenRouter speech-to-text.
+
+Options:
+  -o, --output PATH          Write transcript to PATH instead of stdout
+  --format md|txt|json       Output format (default: md)
+  --model MODEL              OpenRouter transcription model
+                             (default: $MODEL)
+  --language CODE            Optional language hint, e.g. en, vi, ja
+  --chunk-seconds SECONDS    Audio chunk size for API calls (default: $CHUNK_SECONDS)
+  --credentials-file PATH    Env file to source if OPENROUTER_API_KEY is unset
+                             (default: $CREDENTIALS_FILE)
+  --keep-temp                Keep downloaded audio and chunks for debugging
+  -h, --help                 Show this help
+
+Requires:
+  yt-dlp, ffmpeg, curl, jq, python3, and OPENROUTER_API_KEY
+
+Examples:
+  $SCRIPT_NAME 'https://www.youtube.com/watch?v=VIDEO_ID'
+  $SCRIPT_NAME --language en --output transcript.md VIDEO_ID
+  $SCRIPT_NAME --model openai/gpt-4o-mini-transcribe --format json VIDEO_ID
+EOF
+}
+
+log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2; }
+die() {
+  log "ERROR: $*"
+  exit 1
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+need_value() {
+  [[ $# -ge 2 ]] || die "$1 requires a value"
+}
+
+hms() {
+  local total="$1"
+  printf '%02d:%02d:%02d' "$((total / 3600))" "$(((total % 3600) / 60))" "$((total % 60))"
+}
+
+normalize_source() {
+  case "$1" in
+  http://* | https://*) printf '%s\n' "$1" ;;
+  *youtube.com/* | *youtu.be/*) printf 'https://%s\n' "$1" ;;
+  *) printf 'https://www.youtube.com/watch?v=%s\n' "$1" ;;
+  esac
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -o | --output)
+    need_value "$@"
+    OUTPUT="$2"
+    shift 2
+    ;;
+  --format)
+    need_value "$@"
+    FORMAT="$2"
+    shift 2
+    ;;
+  --model)
+    need_value "$@"
+    MODEL="$2"
+    shift 2
+    ;;
+  --language)
+    need_value "$@"
+    LANGUAGE="$2"
+    shift 2
+    ;;
+  --chunk-seconds)
+    need_value "$@"
+    CHUNK_SECONDS="$2"
+    shift 2
+    ;;
+  --credentials-file)
+    need_value "$@"
+    CREDENTIALS_FILE="$2"
+    shift 2
+    ;;
+  --keep-temp)
+    KEEP_TEMP=true
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  --)
+    shift
+    break
+    ;;
+  -*)
+    die "Unknown option: $1"
+    ;;
+  *)
+    if [[ -n "$INPUT" ]]; then
+      die "Unexpected extra argument: $1"
+    fi
+    INPUT="$1"
+    shift
+    ;;
+  esac
+done
+
+if [[ -z "$INPUT" && $# -gt 0 ]]; then
+  INPUT="$1"
+  shift
+fi
+
+[[ -n "$INPUT" ]] || {
+  usage >&2
+  exit 1
+}
+[[ $# -eq 0 ]] || die "Unexpected extra argument: $1"
+
+case "$FORMAT" in
+md | txt | json) ;;
+*) die "Unsupported format: $FORMAT (expected md, txt, or json)" ;;
+esac
+
+if ! [[ "$CHUNK_SECONDS" =~ ^[0-9]+$ ]] || [[ "$CHUNK_SECONDS" -le 0 ]]; then
+  die "--chunk-seconds must be a positive integer"
+fi
+
+need_cmd yt-dlp
+need_cmd ffmpeg
+need_cmd curl
+need_cmd jq
+need_cmd python3
+
+if [[ -z "${OPENROUTER_API_KEY:-}" && -f "$CREDENTIALS_FILE" ]]; then
+  # shellcheck source=/dev/null
+  source "$CREDENTIALS_FILE"
+fi
+
+[[ -n "${OPENROUTER_API_KEY:-}" ]] || die "OPENROUTER_API_KEY is not set. Export it or add it to $CREDENTIALS_FILE"
+
+OPENROUTER_BASE_URL="${OPENROUTER_BASE_URL%/}"
+SOURCE="$(normalize_source "$INPUT")"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/youtube-transcribe.XXXXXX")"
+CHUNKS_DIR="$TMP_DIR/chunks"
+SEGMENTS_JSONL="$TMP_DIR/segments.jsonl"
+TRANSCRIPT_FILE="$TMP_DIR/transcript.$FORMAT"
+
+cleanup() {
+  if [[ "$KEEP_TEMP" == false && -n "${TMP_DIR:-}" && -d "$TMP_DIR" ]]; then
+    rm -rf "$TMP_DIR"
+  elif [[ "${TMP_DIR:-}" ]]; then
+    log "Kept temp directory: $TMP_DIR"
+  fi
+}
+trap cleanup EXIT
+
+mkdir -p "$CHUNKS_DIR"
+: >"$SEGMENTS_JSONL"
+
+log "Downloading audio with yt-dlp"
+yt-dlp \
+  --no-playlist \
+  --no-warnings \
+  -x \
+  --audio-format mp3 \
+  --audio-quality 64K \
+  -o "$TMP_DIR/source.%(ext)s" \
+  "$SOURCE" >&2
+
+AUDIO_FILE=""
+for candidate in "$TMP_DIR"/source.*; do
+  if [[ -f "$candidate" ]]; then
+    AUDIO_FILE="$candidate"
+    break
+  fi
+done
+[[ -n "$AUDIO_FILE" ]] || die "yt-dlp did not produce an audio file"
+
+log "Splitting audio into ${CHUNK_SECONDS}s chunks"
+ffmpeg \
+  -hide_banner \
+  -loglevel error \
+  -i "$AUDIO_FILE" \
+  -vn \
+  -ac 1 \
+  -ar 16000 \
+  -b:a 48k \
+  -f segment \
+  -segment_time "$CHUNK_SECONDS" \
+  -reset_timestamps 1 \
+  "$CHUNKS_DIR/chunk_%04d.mp3"
+
+chunks=()
+for chunk in "$CHUNKS_DIR"/chunk_*.mp3; do
+  [[ -f "$chunk" ]] && chunks+=("$chunk")
+done
+[[ "${#chunks[@]}" -gt 0 ]] || die "ffmpeg did not produce any chunks"
+
+write_initial_output() {
+  case "$FORMAT" in
+  md)
+    {
+      printf '# YouTube transcript\n\n'
+      printf 'source:: %s\n' "$SOURCE"
+      printf 'model:: %s\n' "$MODEL"
+      [[ -n "$LANGUAGE" ]] && printf 'language:: %s\n' "$LANGUAGE"
+      printf 'generated_at:: %s\n\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    } >"$TRANSCRIPT_FILE"
+    ;;
+  txt)
+    : >"$TRANSCRIPT_FILE"
+    ;;
+  json)
+    : >"$TRANSCRIPT_FILE"
+    ;;
+  esac
+}
+
+build_payload() {
+  local chunk="$1"
+  local payload_file="$2"
+
+  python3 - "$MODEL" "$LANGUAGE" "$chunk" "$payload_file" <<'PY'
+import base64
+import json
+import sys
+
+model, language, chunk_path, payload_path = sys.argv[1:]
+
+with open(chunk_path, "rb") as audio_file:
+    audio_data = base64.b64encode(audio_file.read()).decode("utf-8")
+
+payload = {
+    "model": model,
+    "input_audio": {
+        "data": audio_data,
+        "format": "mp3",
+    },
+}
+
+if language:
+    payload["language"] = language
+
+with open(payload_path, "w", encoding="utf-8") as payload_file:
+    json.dump(payload, payload_file, separators=(",", ":"))
+PY
+}
+
+transcribe_chunk() {
+  local chunk="$1"
+  local index="$2"
+  local payload_file="$TMP_DIR/payload_$index.json"
+  local response_file="$TMP_DIR/response_$index.json"
+  local status
+
+  build_payload "$chunk" "$payload_file"
+  status="$(curl -sS \
+    -w '%{http_code}' \
+    -o "$response_file" \
+    -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+    -H 'Content-Type: application/json' \
+    --data-binary "@$payload_file" \
+    "$OPENROUTER_BASE_URL/api/v1/audio/transcriptions")"
+
+  case "$status" in
+  2*) ;;
+  *) die "OpenRouter returned HTTP $status: $(cat "$response_file")" ;;
+  esac
+
+  jq -er '.text // empty' "$response_file" || die "OpenRouter response did not include .text: $(cat "$response_file")"
+}
+
+append_chunk() {
+  local start_seconds="$1"
+  local start_hms="$2"
+  local text="$3"
+
+  case "$FORMAT" in
+  md)
+    {
+      printf '## %s\n\n' "$start_hms"
+      printf '%s\n\n' "$text"
+    } >>"$TRANSCRIPT_FILE"
+    ;;
+  txt)
+    {
+      printf '[%s]\n' "$start_hms"
+      printf '%s\n\n' "$text"
+    } >>"$TRANSCRIPT_FILE"
+    ;;
+  json)
+    jq -n \
+      --argjson start_seconds "$start_seconds" \
+      --arg start "$start_hms" \
+      --arg text "$text" \
+      '{start_seconds: $start_seconds, start: $start, text: $text}' >>"$SEGMENTS_JSONL"
+    ;;
+  esac
+}
+
+write_final_json() {
+  jq -s \
+    --arg source "$SOURCE" \
+    --arg model "$MODEL" \
+    --arg language "$LANGUAGE" \
+    '{source: $source, model: $model, chunks: .} + (if $language != "" then {language: $language} else {} end)' \
+    "$SEGMENTS_JSONL" >"$TRANSCRIPT_FILE"
+}
+
+write_initial_output
+
+chunk_count="${#chunks[@]}"
+index=0
+for chunk in "${chunks[@]}"; do
+  start_seconds="$((index * CHUNK_SECONDS))"
+  start_hms="$(hms "$start_seconds")"
+  log "Transcribing chunk $((index + 1))/$chunk_count ($start_hms) with $MODEL"
+  text="$(transcribe_chunk "$chunk" "$index")"
+  append_chunk "$start_seconds" "$start_hms" "$text"
+  index="$((index + 1))"
+done
+
+if [[ "$FORMAT" == json ]]; then
+  write_final_json
+fi
+
+if [[ -n "$OUTPUT" ]]; then
+  mkdir -p "$(dirname "$OUTPUT")"
+  cp "$TRANSCRIPT_FILE" "$OUTPUT"
+  log "Wrote transcript to $OUTPUT"
+else
+  cat "$TRANSCRIPT_FILE"
+fi

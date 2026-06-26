@@ -9,6 +9,7 @@
 - **Zsh + Zim + Spaceship**: shell, framework, prompt
 - **Neovim**: [lelouvincx/nvim](https://github.com/lelouvincx/nvim)
 - **Mise**: tool version mgr
+- **Local CLIs**: `yt-transcript` for YouTube captions, `youtube-transcribe` for OpenRouter STT
 
 ## Install
 
@@ -29,6 +30,12 @@ brew install stow    # macOS; apt/dnf for Linux
 ```bash
 git pull --recurse-submodules && git submodule update --remote --merge
 ./install.sh
+```
+
+## Test
+
+```bash
+./scripts/test-youtube-transcribe.sh
 ```
 
 ## Uninstall
