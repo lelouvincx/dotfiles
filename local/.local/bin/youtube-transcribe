@@ -176,15 +176,28 @@ trap cleanup EXIT
 mkdir -p "$CHUNKS_DIR"
 : >"$SEGMENTS_JSONL"
 
+download_audio() {
+  local output_pattern="$TMP_DIR/source.%(ext)s"
+  local common_args=(
+    --no-playlist
+    --no-warnings
+    -x
+    --audio-format mp3
+    --audio-quality 64K
+    -o "$output_pattern"
+  )
+
+  if yt-dlp "${common_args[@]}" "$SOURCE" >&2; then
+    return
+  fi
+
+  log "yt-dlp failed; retrying with youtube web player client"
+  rm -f "$TMP_DIR"/source.*
+  yt-dlp --extractor-args 'youtube:player_client=web' "${common_args[@]}" "$SOURCE" >&2
+}
+
 log "Downloading audio with yt-dlp"
-yt-dlp \
-  --no-playlist \
-  --no-warnings \
-  -x \
-  --audio-format mp3 \
-  --audio-quality 64K \
-  -o "$TMP_DIR/source.%(ext)s" \
-  "$SOURCE" >&2
+download_audio
 
 AUDIO_FILE=""
 for candidate in "$TMP_DIR"/source.*; do
