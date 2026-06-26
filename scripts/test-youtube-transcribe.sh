@@ -55,10 +55,15 @@ make_fake_deps() {
 set -euo pipefail
 
 output_pattern=""
+uses_web_client=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
   -o)
     output_pattern="$2"
+    shift 2
+    ;;
+  --extractor-args)
+    [[ "$2" == *'youtube:player_client=web'* ]] && uses_web_client=true
     shift 2
     ;;
   *)
@@ -66,6 +71,24 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+if [[ -n "${YOUTUBE_TRANSCRIBE_TEST_YTDLP_RETRY_DIR:-}" ]]; then
+  mkdir -p "$YOUTUBE_TRANSCRIBE_TEST_YTDLP_RETRY_DIR"
+  count_file="$YOUTUBE_TRANSCRIBE_TEST_YTDLP_RETRY_DIR/yt-dlp-count"
+  count=0
+  [[ -f "$count_file" ]] && count="$(cat "$count_file")"
+  printf '%s' "$((count + 1))" >"$count_file"
+
+  if [[ "$count" -eq 0 ]]; then
+    printf 'simulated yt-dlp failure\n' >&2
+    exit 1
+  fi
+
+  if [[ "$uses_web_client" != true ]]; then
+    printf 'expected youtube web player client retry\n' >&2
+    exit 2
+  fi
+fi
 
 [[ -n "$output_pattern" ]] || { echo 'missing -o' >&2; exit 2; }
 output_file="${output_pattern//%(ext)s/mp3}"
@@ -228,10 +251,34 @@ test_markdown_stdout_flow() {
   pass 'markdown stdout flow'
 }
 
+test_yt_dlp_web_client_retry() {
+  local fake_bin="$TMP_DIR/fake-bin-retry"
+  local retry_dir="$TMP_DIR/retry"
+  local output_file="$TMP_DIR/retry-transcript.json"
+  make_fake_deps "$fake_bin"
+
+  env \
+    PATH="$fake_bin:$PATH" \
+    OPENROUTER_API_KEY='test-key' \
+    YOUTUBE_TRANSCRIBE_TEST_YTDLP_RETRY_DIR="$retry_dir" \
+    "$BIN" \
+      --format json \
+      --language en \
+      --chunk-seconds 60 \
+      --output "$output_file" \
+      dQw4w9WgXcQ >/dev/null
+
+  [[ "$(cat "$retry_dir/yt-dlp-count")" == 2 ]] || fail 'yt-dlp should be called twice when first download fails'
+  jq -e '.chunks | length == 2' "$output_file" >/dev/null
+
+  pass 'yt-dlp web client retry'
+}
+
 test_help_and_syntax
 test_argument_validation
 test_missing_key_before_network
 test_mocked_json_transcription_flow
 test_markdown_stdout_flow
+test_yt_dlp_web_client_retry
 
 printf 'All youtube-transcribe tests passed.\n'
