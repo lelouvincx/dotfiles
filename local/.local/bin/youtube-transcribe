@@ -357,7 +357,10 @@ if [[ "$FORMAT" == json ]]; then
 fi
 
 if [[ -n "$OUTPUT" ]]; then
-  mkdir -p "$(dirname "$OUTPUT")"
+  output_dir="$(dirname "$OUTPUT")"
+  if [[ "$output_dir" != "." ]]; then
+    mkdir -p "$output_dir"
+  fi
   cp "$TRANSCRIPT_FILE" "$OUTPUT"
   log "Wrote transcript to $OUTPUT"
 else
