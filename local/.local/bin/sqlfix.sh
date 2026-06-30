@@ -77,7 +77,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Common SQLFluff options
-SQLFLUFF_COMMON="--templater=dbt --verbose"
+SQLFLUFF_COMMON=(--templater=dbt --verbose)
 
 # Function to run SQLFluff commands
 run_sqlfluff() {
@@ -85,13 +85,13 @@ run_sqlfluff() {
 	local paths=("${@:2}")
 
 	if [ "$VERBOSE" = true ]; then
-		echo "Running: sqlfluff $command $SQLFLUFF_COMMON ${paths[*]}"
+		echo "Running: sqlfluff $command ${SQLFLUFF_COMMON[*]} ${paths[*]}"
 	fi
 
 	if [ "$command" = "fix" ]; then
-		sqlfluff fix $SQLFLUFF_COMMON "${paths[@]}"
+		sqlfluff fix "${SQLFLUFF_COMMON[@]}" "${paths[@]}"
 	elif [ "$command" = "lint" ]; then
-		sqlfluff lint $SQLFLUFF_COMMON --nofail "${paths[@]}"
+		sqlfluff lint "${SQLFLUFF_COMMON[@]}" --nofail "${paths[@]}"
 	fi
 }
 

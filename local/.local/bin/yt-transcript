@@ -187,9 +187,8 @@ extract_video_id() {
 # Main extraction function
 extract_transcript() {
     local url="$1"
-    local tmp_dir
     tmp_dir=$(mktemp -d)
-    trap "rm -rf $tmp_dir" EXIT
+    trap 'rm -rf "$tmp_dir"' EXIT
 
     local video_id
     video_id=$(extract_video_id "$url")
@@ -252,7 +251,6 @@ extract_transcript() {
     fi
 
     # Parse VTT and merge with chapters
-    local output=""
     local current_chapter_idx=0
     local last_text=""
 

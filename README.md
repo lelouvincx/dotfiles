@@ -9,7 +9,24 @@
 - **Zsh + Zim + Spaceship**: shell, framework, prompt
 - **Neovim**: [lelouvincx/nvim](https://github.com/lelouvincx/nvim)
 - **Mise**: tool version mgr
+- **Bat + Herdr**: pager theme and terminal workspace config
 - **Local CLIs**: `yt-transcript` for YouTube captions, `youtube-transcribe` for OpenRouter STT
+
+## Layout
+
+```diagram
+╭──────────────╮       ╭──────────────────────╮
+│ install.sh   │──────▶│ scripts/stow-modules │
+│ uninstall.sh │       │ module → target map   │
+╰──────┬───────╯       ╰──────────┬───────────╯
+       │                          │
+       ▼                          ▼
+╭──────────────╮       ╭──────────────────────╮
+│ $HOME        │       │ $HOME/.config        │
+│ zshrc tmux   │       │ alacritty nvim mise  │
+│ local prompt │       │ bat herdr            │
+╰──────────────╯       ╰──────────────────────╯
+```
 
 ## Install
 
@@ -18,12 +35,12 @@ git clone --recursive https://github.com/lelouvincx/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 brew install stow    # macOS; apt/dnf for Linux
 ./install.sh         # all modules
-./install.sh zsh tmux nvim  # or pick modules
+./install.sh zshrc tmux nvim  # or pick modules
 ```
 
 ## Modules
 
-`local` `zshrc` `tmux` `alacritty` `nvim` `mise` `spaceship`
+`zshrc` `tmux` `alacritty` `nvim` `local` `mise` `spaceship` `bat` `herdr`
 
 ## Update
 
@@ -36,6 +53,7 @@ git pull --recurse-submodules && git submodule update --remote --merge
 
 ```bash
 ./scripts/test-youtube-transcribe.sh
+uvx pre-commit run --all-files
 ```
 
 ## Uninstall

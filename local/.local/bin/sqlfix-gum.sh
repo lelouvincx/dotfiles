@@ -104,12 +104,12 @@ if ! gum confirm "Proceed?"; then
 fi
 
 # Common SQLFluff options
-SQLFLUFF_COMMON="--templater=dbt --verbose"
+SQLFLUFF_COMMON=(--templater=dbt --verbose)
 
 # Run fix if requested
 if [ "$RUN_FIX" = true ]; then
 	gum style --foreground 104 "🔧 Running SQLFluff fix..."
-	gum spin --spinner dot --title "Running fix..." --show-output --show-error -- sqlfluff fix $SQLFLUFF_COMMON "$@"
+	gum spin --spinner dot --title "Running fix..." --show-output --show-error -- sqlfluff fix "${SQLFLUFF_COMMON[@]}" "$@"
 	FIX_STATUS=$?
 	if [ $FIX_STATUS -eq 0 ]; then
 		gum style --foreground 86 "✓ Fix completed successfully"
@@ -121,7 +121,7 @@ fi
 # Run lint if requested
 if [ "$RUN_LINT" = true ]; then
 	gum style --foreground 104 "🔍 Running SQLFluff lint..."
-	gum spin --spinner dot --title "Running lint..." --show-output --show-error -- sqlfluff lint $SQLFLUFF_COMMON --nofail "$@"
+	gum spin --spinner dot --title "Running lint..." --show-output --show-error -- sqlfluff lint "${SQLFLUFF_COMMON[@]}" --nofail "$@"
 	LINT_STATUS=$?
 
 	if [ $LINT_STATUS -eq 0 ]; then
