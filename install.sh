@@ -15,9 +15,12 @@ NC='\033[0m' # No Color
 VERBOSE=0
 CONFIG_DIR="${HOME}/.config"
 HOME_DIR="${HOME}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+selected_modules=()
 
 # Define modules and their targets
-modules=("zshrc" "tmux" "alacritty" "nvim" "local" "mise" "spaceship" "bat" "herdr")
+# shellcheck source=scripts/stow-modules.sh
+source "${SCRIPT_DIR}/scripts/stow-modules.sh"
 
 # Show help message
 show_help() {
@@ -39,16 +42,33 @@ show_help() {
 }
 
 # Parse command line arguments
-for arg in "$@"; do
-	if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
-		show_help
-		exit 0
-	elif [[ "$arg" == "-v" || "$arg" == "--verbose" ]]; then
-		VERBOSE=1
-		# Remove the verbose argument from the arguments list
-		set -- "${@/$arg/}"
-	fi
-done
+parse_args() {
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+		-h | --help)
+			show_help
+			exit 0
+			;;
+		-v | --verbose)
+			VERBOSE=1
+			;;
+		--)
+			shift
+			selected_modules+=("$@")
+			break
+			;;
+		-*)
+			echo -e "${RED}Unknown option: $1${NC}" >&2
+			show_help >&2
+			exit 1
+			;;
+		*)
+			selected_modules+=("$1")
+			;;
+		esac
+		shift
+	done
+}
 
 # Debug function
 debug() {
@@ -57,50 +77,21 @@ debug() {
 	fi
 }
 
-# Check for GNU Stow
-if ! command -v stow &>/dev/null; then
-	echo -e "${RED}${BOLD}Error:${NC} GNU Stow is not installed. Please install it to proceed."
-	echo -e "${YELLOW}On MacOS:${NC} brew install stow"
-	echo -e "${YELLOW}On Ubuntu/Debian:${NC} sudo apt install stow"
-	echo -e "${YELLOW}On Fedora/RHEL:${NC} sudo dnf/yum install stow"
-	exit 1
-fi
-
-# Create necessary directories
-mkdir -p "${CONFIG_DIR}"
-mkdir -p "${HOME}/.local/bin"
-
-# Get target directory for a module
-get_target_dir() {
-	local module="$1"
-	case "$module" in
-	"zshrc" | "tmux" | "local" | "spaceship")
-		echo "$HOME_DIR"
-		;;
-	"alacritty" | "nvim" | "mise" | "bat" | "herdr")
-		echo "$CONFIG_DIR"
-		;;
-	*)
-		echo "$HOME_DIR" # Default to home directory
-		;;
-	esac
-}
-
-# Check if module exists
-module_exists() {
-	local module="$1"
-	for m in "${modules[@]}"; do
-		if [[ "$m" == "$module" ]]; then
-			return 0
+validate_selected_modules() {
+	local module
+	for module in "${selected_modules[@]}"; do
+		if ! module_exists "$module"; then
+			echo -e "${RED}Module '$module' is not recognized. Please check the available modules.${NC}" >&2
+			exit 1
 		fi
 	done
-	return 1
 }
 
 # Stow a module
 stow_module() {
 	local module_name="$1"
-	local target_dir=$(get_target_dir "$module_name")
+	local target_dir
+	target_dir=$(get_target_dir "$module_name")
 
 	echo -e "Stowing ${BOLD}${GREEN}$module_name${NC} to target at ${BLUE}${target_dir}${NC}"
 	if ! stow -R -v -t "$target_dir" "$module_name" 2>&1; then
@@ -124,7 +115,7 @@ stow_all() {
 	local current=0
 
 	for module in "${modules[@]}"; do
-		((current++))
+		((++current))
 		show_progress $current $total "$module"
 		stow_module "$module"
 	done
@@ -145,6 +136,21 @@ print_banner() {
 
 # Main function
 main() {
+	parse_args "$@"
+
+	# Check for GNU Stow
+	if ! command -v stow &>/dev/null; then
+		echo -e "${RED}${BOLD}Error:${NC} GNU Stow is not installed. Please install it to proceed."
+		echo -e "${YELLOW}On MacOS:${NC} brew install stow"
+		echo -e "${YELLOW}On Ubuntu/Debian:${NC} sudo apt install stow"
+		echo -e "${YELLOW}On Fedora/RHEL:${NC} sudo dnf/yum install stow"
+		exit 1
+	fi
+
+	# Create necessary directories
+	mkdir -p "${CONFIG_DIR}"
+	mkdir -p "${HOME}/.local/bin"
+
 	print_banner
 
 	echo -e "Available modules: ${YELLOW}${modules[*]}${NC}"
@@ -152,26 +158,21 @@ main() {
 	echo -e "\n"
 
 	# Check if specific modules were requested
-	if [ $# -eq 0 ]; then
+	if [ ${#selected_modules[@]} -eq 0 ]; then
 		echo -e "${CYAN}Installing all modules...${NC}"
 		stow_all
 	else
-		debug "Input arguments: $@"
+		debug "Input modules: ${selected_modules[*]}"
+		validate_selected_modules
 		# Install specified modules
-		local total=$#
+		local total=${#selected_modules[@]}
 		local current=0
 
-		for module in "$@"; do
-			((current++))
+		for module in "${selected_modules[@]}"; do
+			((++current))
 			debug "Processing module: $module"
-			if module_exists "$module"; then
-				debug "Module '$module' exists in the list."
-				show_progress $current $total "$module"
-				stow_module "$module"
-			else
-				debug "Module '$module' does not exist in the list."
-				echo -e "${RED}Module '$module' is not recognized. Please check the available modules.${NC}"
-			fi
+			show_progress $current $total "$module"
+			stow_module "$module"
 		done
 	fi
 

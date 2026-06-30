@@ -45,7 +45,7 @@ alias f="fastfetch -c examples/12.jsonc"
 
 # Configure sqlfix executable
 # Prefer gum version if available
-if ! $(command -v gum) &>/dev/null; then
+if command -v gum >/dev/null 2>&1; then
   alias sqlfix="${HOME}/.local/bin/sqlfix-gum.sh"
 else
   alias sqlfix="${HOME}/.local/bin/sqlfix.sh"
