@@ -67,6 +67,10 @@ success() {
     echo -e "${GREEN}$1${NC}" >&2
 }
 
+need_value() {
+    [[ $# -ge 2 ]] || error "$1 requires a value"
+}
+
 # Check dependencies
 check_deps() {
     if ! command -v uvx &> /dev/null; then
@@ -346,7 +350,7 @@ output_text() {
             echo ""
             echo "[$(format_time "$next_chapter_time")] --- ${chapter_titles[$current_chapter_idx]} ---"
             echo ""
-            ((current_chapter_idx++))
+            ((++current_chapter_idx))
             next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
         done
 
@@ -379,7 +383,7 @@ output_markdown() {
             echo "## ${chapter_titles[$current_chapter_idx]} ($(format_time "$next_chapter_time"))"
             echo ""
             in_chapter=true
-            ((current_chapter_idx++))
+            ((++current_chapter_idx))
             next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
         done
 
@@ -411,7 +415,7 @@ output_json() {
         # Update current chapter
         while [[ "$current_chapter_idx" -lt "${#chapter_starts[@]}" && "$time" -ge "$next_chapter_time" ]]; do
             current_chapter="${chapter_titles[$current_chapter_idx]}"
-            ((current_chapter_idx++))
+            ((++current_chapter_idx))
             next_chapter_time=${chapter_starts[$current_chapter_idx]:-999999}
         done
 
@@ -457,6 +461,7 @@ parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -f|--format)
+                need_value "$@"
                 FORMAT="$2"
                 if [[ ! "$FORMAT" =~ ^(text|markdown|json)$ ]]; then
                     error "Invalid format: $FORMAT. Use text, markdown, or json."
@@ -464,10 +469,12 @@ parse_args() {
                 shift 2
                 ;;
             -l|--lang)
+                need_value "$@"
                 LANG="$2"
                 shift 2
                 ;;
             -o|--output)
+                need_value "$@"
                 OUTPUT="$2"
                 shift 2
                 ;;
@@ -487,6 +494,9 @@ parse_args() {
                 error "Unknown option: $1"
                 ;;
             *)
+                if [[ -n "${URL:-}" ]]; then
+                    error "Unexpected extra argument: $1"
+                fi
                 URL="$1"
                 shift
                 ;;
@@ -500,8 +510,8 @@ parse_args() {
 
 # Main
 main() {
-    check_deps
     parse_args "$@"
+    check_deps
 
     # Check R2 deps if uploading
     if [[ "$UPLOAD" == true ]]; then
@@ -524,14 +534,14 @@ main() {
             error "Could not extract video ID from URL: $URL"
         fi
 
-        # Save to temp file (predictable path, overwrite if exists)
-        local tmp_file="/tmp/yt-transcript-${video_id}.${ext}"
-        trap "rm -f $tmp_file" EXIT
+        local tmp_file
+        tmp_file=$(mktemp "${TMPDIR:-/tmp}/yt-transcript-${video_id}.XXXXXX.${ext}")
 
         extract_transcript "$URL" > "$tmp_file"
 
         local public_url
         public_url=$(upload_to_r2 "$tmp_file" "$video_id" "$ext")
+        rm -f "$tmp_file"
         success "Uploaded to R2"
         echo "$public_url"
     elif [[ -n "$OUTPUT" ]]; then
