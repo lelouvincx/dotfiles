@@ -84,7 +84,6 @@ nvim/
         treesitter.lua
         zenmode.lua
     .git
-    .repomixignore
     init.lua
     lazy-lock.json
     lazyvim.json
@@ -101,7 +100,6 @@ zshrc/
   .zimrc
   .zshenv
   .zshrc
-.repomixignore
 .stow-local-ignore
 AGENTS.md
 Brewfile
@@ -110,7 +108,6 @@ default-iterm-profile.json
 install.sh
 LICENSE
 README.md
-repomix.config.json
 touchegg.conf
 uninstall.sh
 ```
