@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+AGENT_SKILLS_REPO="${AGENT_SKILLS_REPO:-https://github.com/lelouvincx/agent-skills.git}"
+AGENT_SKILLS_DIR="${AGENT_SKILLS_DIR:-/home/user/workspace/agent-skills}"
+
+echo "[agent-skills] ensuring repository at $AGENT_SKILLS_DIR"
+
+if [ ! -d "$AGENT_SKILLS_DIR/.git" ]; then
+	rm -rf "$AGENT_SKILLS_DIR"
+	git clone "$AGENT_SKILLS_REPO" "$AGENT_SKILLS_DIR"
+else
+	if git -C "$AGENT_SKILLS_DIR" diff --quiet && git -C "$AGENT_SKILLS_DIR" diff --cached --quiet; then
+		git -C "$AGENT_SKILLS_DIR" pull --ff-only
+	else
+		echo "[agent-skills] local changes detected; skipping pull"
+	fi
+fi
+
+# Keep fresh orb bootstrap quiet while upstream agent-skills catches up with
+# GoogleChrome/modern-web-guidance's file rename.
+if [ -f "$AGENT_SKILLS_DIR/remote-skills.yaml" ]; then
+	python3 - "$AGENT_SKILLS_DIR/remote-skills.yaml" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace(
+    "guides/user-experience/declarative-button-actions.md",
+    "guides/user-experience/custom-button-actions.md",
+)
+path.write_text(text)
+PY
+fi
+
+# E2B orbs may not include rsync by default. Install it when possible because
+# sync-skills.sh uses rsync to project Amp plugins/docs into ~/.config/amp.
+if ! command -v rsync >/dev/null 2>&1; then
+	echo "[agent-skills] rsync missing; attempting to install it"
+	if command -v apt-get >/dev/null 2>&1; then
+		if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+			apt-get update
+			DEBIAN_FRONTEND=noninteractive apt-get install -y rsync
+		elif command -v sudo >/dev/null 2>&1; then
+			sudo apt-get update
+			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y rsync
+		fi
+	fi
+fi
+
+# Last-resort fallback for locked-down orbs where package installation is not
+# available. sync-skills.sh only needs this subset: rsync -a --delete
+# <source-dir>/ <dest-dir>/ for Amp artifacts.
+if ! command -v rsync >/dev/null 2>&1; then
+	echo "[agent-skills] rsync install unavailable; using limited shell fallback"
+	rsync() {
+		local delete=false
+
+		while [ "$#" -gt 0 ]; do
+			case "$1" in
+				-a|--archive)
+					shift
+					;;
+				--delete)
+					delete=true
+					shift
+					;;
+				--*)
+					echo "[agent-skills] unsupported rsync option in orb fallback: $1" >&2
+					return 2
+					;;
+				-*)
+					echo "[agent-skills] unsupported rsync option in orb fallback: $1" >&2
+					return 2
+					;;
+				*)
+					break
+					;;
+			esac
+		done
+
+		if [ "$#" -ne 2 ]; then
+			echo "[agent-skills] orb rsync fallback expects source and destination" >&2
+			return 2
+		fi
+
+		local src="$1"
+		local dest="$2"
+
+		mkdir -p "$dest"
+		if [ "$delete" = true ]; then
+			find "$dest" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+		fi
+		cp -a "$src"/. "$dest"/
+	}
+	export -f rsync
+fi
+
+echo "[agent-skills] syncing default skills and Amp plugins"
+"$AGENT_SKILLS_DIR/sync-skills.sh" --remote
