@@ -2,7 +2,7 @@
 # Tool configurations
 
 # Configure language management tool (asdf or mise)
-# WARN: asdf or mise must be intalled first, to be able to use other tools
+# WARN: asdf or mise must be installed first, to be able to use other tools
 if [[ "$LANGUAGE_EXECUTABLE" == "asdf" ]]; then
   # Asdf configurations
   . "$HOME/.asdf/asdf.sh"

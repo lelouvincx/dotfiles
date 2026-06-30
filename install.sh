@@ -116,7 +116,7 @@ stow_all() {
 
 	for module in "${modules[@]}"; do
 		((++current))
-		show_progress $current $total "$module"
+		show_progress "$current" "$total" "$module"
 		stow_module "$module"
 	done
 }
@@ -171,7 +171,7 @@ main() {
 		for module in "${selected_modules[@]}"; do
 			((++current))
 			debug "Processing module: $module"
-			show_progress $current $total "$module"
+			show_progress "$current" "$total" "$module"
 			stow_module "$module"
 		done
 	fi

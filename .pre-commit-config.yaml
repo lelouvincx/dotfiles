@@ -30,8 +30,15 @@ repos:
     rev: v2.3.0
     hooks:
       - id: codespell
-        args: ["--skip", "node_modules,dist"] # Exclude folders if needed
-        files: "\\.(py|js|ts)$" # Regex to match Python, JavaScript, and TypeScript files
+        args: ["--skip", "node_modules,dist", "--ignore-words-list", "noice"] # Exclude folders if needed
+        files: "\\.(sh|zsh|bash|py|js|ts|toml|ya?ml|md)$"
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ["-x"]
+        files: "^(install\\.sh|uninstall\\.sh|scripts/.*\\.sh|local/\\.local/bin/(r2up|sqlfix(-gum)?\\.sh|youtube-transcribe|yt-transcript))$"
 
   # This checks for any potential detecting and preventing hardcoded secrets like
   # passwords, API keys, and tokens in git repos. Gitleaks is an easy-to-use, all-in-one
