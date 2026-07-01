@@ -4,6 +4,8 @@ set -euo pipefail
 AGENT_SKILLS_REPO="${AGENT_SKILLS_REPO:-https://github.com/lelouvincx/agent-skills.git}"
 AGENT_SKILLS_DIR="${AGENT_SKILLS_DIR:-/home/user/workspace/agent-skills}"
 
+export PATH="${HOME:-/home/user}/.local/bin:$PATH"
+
 echo "[agent-skills] ensuring repository at $AGENT_SKILLS_DIR"
 
 if [ ! -d "$AGENT_SKILLS_DIR/.git" ]; then
@@ -33,6 +35,43 @@ text = text.replace(
 path.write_text(text)
 PY
 fi
+
+ensure_uv() {
+	if command -v uv >/dev/null 2>&1 && command -v uvx >/dev/null 2>&1; then
+		return 0
+	fi
+
+	echo "[agent-skills] uv/uvx missing; installing uv"
+	if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+		if command -v apt-get >/dev/null 2>&1; then
+			if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+				apt-get update
+				DEBIAN_FRONTEND=noninteractive apt-get install -y curl ca-certificates
+			elif command -v sudo >/dev/null 2>&1; then
+				sudo apt-get update
+				sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl ca-certificates
+			fi
+		fi
+	fi
+
+	if command -v curl >/dev/null 2>&1; then
+		curl -LsSf https://astral.sh/uv/install.sh | sh
+	elif command -v wget >/dev/null 2>&1; then
+		wget -qO- https://astral.sh/uv/install.sh | sh
+	else
+		echo "[agent-skills] curl or wget is required to install uv" >&2
+		return 1
+	fi
+
+	export PATH="${HOME:-/home/user}/.local/bin:$PATH"
+
+	if ! command -v uv >/dev/null 2>&1 || ! command -v uvx >/dev/null 2>&1; then
+		echo "[agent-skills] uv install did not add uv/uvx to PATH" >&2
+		return 1
+	fi
+}
+
+ensure_uv
 
 # E2B orbs may not include rsync by default. Install it when possible because
 # sync-skills.sh uses rsync to project Amp plugins/docs into ~/.config/amp.
