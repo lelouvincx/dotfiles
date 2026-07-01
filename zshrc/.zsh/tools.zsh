@@ -21,6 +21,35 @@ eval "$(zoxide init zsh)"
 # Direnv initialization
 eval "$(direnv hook zsh)"
 
+# Auto update clean main branches when entering a git repo.
+autoload -Uz add-zsh-hook
+typeset -gA _auto_git_pulled_repos
+
+auto_git_pull_main_on_cd() {
+  command -v git >/dev/null 2>&1 || return
+
+  local repo_root branch
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || return
+
+  # Pull each repo at most once per shell session.
+  [[ -n "${_auto_git_pulled_repos[$repo_root]}" ]] && return
+
+  branch=$(git -C "$repo_root" branch --show-current 2>/dev/null) || return
+  [[ "$branch" == "main" ]] || return
+
+  # Avoid auto-pulling over local edits, staged changes, or untracked files.
+  [[ -z "$(git -C "$repo_root" status --porcelain)" ]] || return
+
+  echo "git: updating $repo_root main..."
+  git -C "$repo_root" fetch origin main --quiet || return
+  git -C "$repo_root" pull --ff-only origin main
+
+  _auto_git_pulled_repos[$repo_root]=1
+}
+
+add-zsh-hook chpwd auto_git_pull_main_on_cd
+auto_git_pull_main_on_cd
+
 # Configure ls alternative (lsd or exa)
 if [[ "$LS_EXECUTABLE" == "lsd" ]]; then
   alias ls="lsd"
