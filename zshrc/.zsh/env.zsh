@@ -19,3 +19,4 @@ export PATH="${HOME}/.local/bin:${HOME}/.amp/bin:${HOME}/.opencode/bin:${HOME}/.
 
 # Amp plugin env
 export PLUGINS=all
+export AGENTS_REGISTRY_ENV=local
