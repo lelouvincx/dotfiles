@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+AGENT_SKILLS_REPO="${AGENT_SKILLS_REPO:-https://github.com/lelouvincx/agent-skills.git}"
+AGENT_SKILLS_DIR="${AGENT_SKILLS_DIR:-/home/user/workspace/agent-skills}"
+
+export PATH="${HOME:-/home/user}/.local/bin:$PATH"
+
+echo "[agent-skills] resuming repository at $AGENT_SKILLS_DIR"
+
+if [ ! -d "$AGENT_SKILLS_DIR/.git" ]; then
+	rm -rf "$AGENT_SKILLS_DIR"
+	git clone "$AGENT_SKILLS_REPO" "$AGENT_SKILLS_DIR"
+elif git -C "$AGENT_SKILLS_DIR" diff --quiet && git -C "$AGENT_SKILLS_DIR" diff --cached --quiet; then
+	git -C "$AGENT_SKILLS_DIR" pull --ff-only
+else
+	echo "[agent-skills] local changes detected; skipping pull"
+fi
+
+echo "[agent-skills] syncing default skills and Amp plugins"
+"$AGENT_SKILLS_DIR/sync-skills.sh"
