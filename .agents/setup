@@ -19,23 +19,6 @@ else
 	fi
 fi
 
-# Keep fresh orb bootstrap quiet while upstream agent-skills catches up with
-# GoogleChrome/modern-web-guidance's file rename.
-if [ -f "$AGENT_SKILLS_DIR/remote-skills.yaml" ]; then
-	python3 - "$AGENT_SKILLS_DIR/remote-skills.yaml" <<'PY'
-from pathlib import Path
-import sys
-
-path = Path(sys.argv[1])
-text = path.read_text()
-text = text.replace(
-    "guides/user-experience/declarative-button-actions.md",
-    "guides/user-experience/custom-button-actions.md",
-)
-path.write_text(text)
-PY
-fi
-
 ensure_uv() {
 	if command -v uv >/dev/null 2>&1 && command -v uvx >/dev/null 2>&1; then
 		return 0
@@ -73,8 +56,8 @@ ensure_uv() {
 
 ensure_uv
 
-# E2B orbs may not include rsync by default. Install it when possible because
-# sync-skills.sh uses rsync to project Amp plugins/docs into ~/.config/amp.
+# Amp-managed orbs may not include rsync by default. Install it when possible
+# because sync-skills.sh uses rsync to project Amp plugins/docs into ~/.config/amp.
 if ! command -v rsync >/dev/null 2>&1; then
 	echo "[agent-skills] rsync missing; attempting to install it"
 	if command -v apt-get >/dev/null 2>&1; then
