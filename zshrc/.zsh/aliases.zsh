@@ -70,3 +70,7 @@ alias u="uptime"
 
 # Holistics
 alias h="holistics"
+
+# Quit
+alias quit="exit"
+alias q="exit"

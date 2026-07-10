@@ -61,6 +61,10 @@ previous_tab = "prefix+H"
 next_tab = "prefix+L"
 last_pane = "prefix+backtick"
 
+# Agent switching (K/J for previous/next agent row)
+previous_agent = "prefix+K"
+next_agent = "prefix+J"
+
 # Split (matches tmux: - for vertical, | for horizontal)
 split_vertical = "prefix+backslash"
 split_horizontal = "prefix+minus"
@@ -150,16 +154,17 @@ agent_panel_scope = "all"
 accent = "cyan"
 
 # Background notification popup delivery
+agent_panel_sort = "spaces"
 [ui.toast]
 # off = disable pop-up notifications
 # herdr = show top-right in-app toasts
 # terminal = ask the outer terminal to show a desktop notification
 # system = ask the OS notification service directly
-delivery = "herdr"
+delivery = "off"
 
 # Play sounds when agents change state in background workspaces
 [ui.sound]
-enabled = true
+enabled = false
 # Optional custom mp3 sound files. Relative paths are resolved from this config file's directory.
 # path = "sounds/notification.mp3"   # one mp3 file for all sound notifications
 # done_path = "sounds/done.mp3"      # overrides only finished notifications
