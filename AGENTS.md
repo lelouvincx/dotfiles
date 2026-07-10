@@ -24,6 +24,11 @@ GNU Stow-based modular dotfiles. Each directory is a Stow package:
 - **Stow**: Maintain proper directory hierarchy for symlink targets
 - **Security**: Use `secrets.zsh` (git-ignored) for sensitive vars
 
+## Maintenance
+
+- Follow: conventional branches, conventional commits
+- Whenever opening a new PR, use bot token
+
 ## Directory Structure
 
 ```
