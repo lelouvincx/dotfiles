@@ -50,6 +50,14 @@ make_fake_deps() {
   local fake_bin="$1"
   mkdir -p "$fake_bin"
 
+  cat >"$fake_bin/op" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ "$1" == read && "$2" == 'op://Private/OpenRouter/api key' ]] || exit 2
+printf 'resolved-test-key'
+SH
+
   cat >"$fake_bin/yt-dlp" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -149,7 +157,7 @@ printf '{"text":"Transcript chunk %s"}' "$idx" >"$output_file"
 printf '200'
 SH
 
-  chmod +x "$fake_bin/yt-dlp" "$fake_bin/ffmpeg" "$fake_bin/curl"
+  chmod +x "$fake_bin/op" "$fake_bin/yt-dlp" "$fake_bin/ffmpeg" "$fake_bin/curl"
 }
 
 test_help_and_syntax() {
@@ -182,6 +190,26 @@ test_missing_key_before_network() {
     env -u OPENROUTER_API_KEY PATH="$fake_bin:$PATH" "$BIN" --credentials-file "$TMP_DIR/missing.env" dQw4w9WgXcQ
 
   pass 'missing key validation'
+}
+
+test_resolves_key_from_credentials_file() {
+  local fake_bin="$TMP_DIR/fake-bin-credentials"
+  local output_file="$TMP_DIR/credentials-transcript.json"
+  local credentials_file="$TMP_DIR/openrouter.env"
+  make_fake_deps "$fake_bin"
+  printf 'OPENROUTER_API_KEY=op://Private/OpenRouter/api\\ key\n' >"$credentials_file"
+
+  env -u OPENROUTER_API_KEY \
+    PATH="$fake_bin:$PATH" \
+    "$BIN" \
+      --credentials-file "$credentials_file" \
+      --format json \
+      --output "$output_file" \
+      dQw4w9WgXcQ >/dev/null
+
+  jq -e '.chunks | length == 2' "$output_file" >/dev/null
+
+  pass 'resolves key from credentials file with 1Password CLI'
 }
 
 test_mocked_json_transcription_flow() {
@@ -277,6 +305,7 @@ test_yt_dlp_web_client_retry() {
 test_help_and_syntax
 test_argument_validation
 test_missing_key_before_network
+test_resolves_key_from_credentials_file
 test_mocked_json_transcription_flow
 test_markdown_stdout_flow
 test_yt_dlp_web_client_retry

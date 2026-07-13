@@ -31,7 +31,7 @@ Options:
   -h, --help                 Show this help
 
 Requires:
-  yt-dlp, ffmpeg, curl, jq, python3, and OPENROUTER_API_KEY
+  yt-dlp, ffmpeg, curl, jq, python3, OPENROUTER_API_KEY, and op for op:// references
 
 Examples:
   $SCRIPT_NAME 'https://www.youtube.com/watch?v=VIDEO_ID'
@@ -156,6 +156,11 @@ if [[ -z "${OPENROUTER_API_KEY:-}" && -f "$CREDENTIALS_FILE" ]]; then
 fi
 
 [[ -n "${OPENROUTER_API_KEY:-}" ]] || die "OPENROUTER_API_KEY is not set. Export it or add it to $CREDENTIALS_FILE"
+
+if [[ "$OPENROUTER_API_KEY" == op://* ]]; then
+  need_cmd op
+  OPENROUTER_API_KEY="$(op read "$OPENROUTER_API_KEY")" || die "Could not resolve OPENROUTER_API_KEY with 1Password CLI"
+fi
 
 OPENROUTER_BASE_URL="${OPENROUTER_BASE_URL%/}"
 SOURCE="$(normalize_source "$INPUT")"
