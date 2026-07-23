@@ -34,9 +34,9 @@ Example:
 ```bash
 holistics-init \
   eu \
-  prusa-amql \
-  https://gitlab.com/prusa3d-platform/ai-playground/holistics-bi \
-  feature/migration-audit-parity-prep
+  example-amql \
+  https://gitlab.com/example-org/analytics/holistics-bi \
+  feature/amql-sync
 ```
 
 ## What it does
