@@ -10,7 +10,7 @@
 - **Neovim**: [lelouvincx/nvim](https://github.com/lelouvincx/nvim)
 - **Mise**: tool version mgr
 - **Bat + Herdr**: pager theme and terminal workspace config
-- **Local CLIs**: `yt-transcript` for YouTube captions, `youtube-transcribe` for OpenRouter STT, `holistics-init` for AMQL repository setup
+- **Local CLIs**: `yt-transcript` for YouTube captions, `youtube-transcribe` for OpenRouter STT
 
 ## Layout
 
@@ -41,37 +41,6 @@ brew install stow    # macOS; apt/dnf for Linux
 ## Modules
 
 `zshrc` `tmux` `alacritty` `nvim` `local` `mise` `spaceship` `bat` `herdr`
-
-## Holistics project setup
-
-`holistics-init` creates a local Git repository and downloads its Holistics AMQL code. It requires the
-[Holistics CLI](https://docs.holistics.io/docs/cli) and Git.
-
-Install the `local` dotfiles module to expose the command on `PATH`:
-
-```bash
-./install.sh local
-```
-
-Usage:
-
-```bash
-holistics-init <domain> <directory-amql> <remote-url> <branch>
-```
-
-Example:
-
-```bash
-holistics-init \
-  eu \
-  prusa-amql \
-  https://gitlab.com/prusa3d-platform/ai-playground/holistics-bi \
-  feature/migration-audit-parity-prep
-```
-
-The command authenticates with the selected Holistics domain, creates the directory, initializes Git with
-the specified remote and branch, creates an empty commit, then runs `holistics sync-code .`. The directory
-name must end with `-amql` and must not already exist.
 
 ## Update
 
