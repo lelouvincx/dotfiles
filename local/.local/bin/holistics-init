@@ -1,1 +1,49 @@
-../../../scripts/holistics-init
+#!/bin/bash
+
+set -e
+
+usage() {
+	cat <<'EOF'
+Usage: holistics-init <domain> <directory-amql> <remote-url> <branch>
+
+Example:
+  holistics-init eu prusa-amql \
+    https://gitlab.com/prusa3d-platform/ai-playground/holistics-bi \
+    feature/migration-audit-parity-prep
+EOF
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+	usage
+	exit 0
+fi
+
+if [ "$#" -ne 4 ]; then
+	usage >&2
+	exit 1
+fi
+
+domain=$1
+directory=$2
+remote_url=$3
+branch=$4
+
+if [[ $directory != *-amql ]]; then
+	echo "Error: directory name must end with -amql: $directory" >&2
+	exit 1
+fi
+
+holistics auth "$domain"
+mkdir "$directory"
+
+(
+	cd "$directory"
+	git init
+	git branch -m master
+	git remote add origin "$remote_url"
+	git checkout -b "$branch"
+	git commit --allow-empty -m "empty commit"
+	holistics sync-code .
+)
+
+echo "Holistics project initialized in $directory"
