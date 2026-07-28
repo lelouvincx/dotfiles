@@ -13,7 +13,7 @@ name = "terminal"
 
 # Override individual color tokens on top of the base theme.
 # Accepts: hex (#rrggbb), named colors, rgb(r,g,b), or panel_bg = "reset"
-# [theme.custom]
+[theme.custom]
 panel_bg = "reset"
 # accent = "#f5c2e7"
 # red = "#ff6188"
@@ -146,15 +146,20 @@ prompt_new_tab_name = true
 # Show detected/reported agent labels in split pane borders when no manual pane name is set.
 show_agent_labels_on_pane_borders = true
 
-# Agent panel scope: "current" or "all". Toggling it in the sidebar saves this setting.
-agent_panel_scope = "all"
-
 # Accent color for highlights, borders, and navigation UI.
 # Accepts: hex (#89b4fa), named colors (cyan, blue, magenta), or rgb(r,g,b)
 accent = "cyan"
 
 # Background notification popup delivery
 agent_panel_sort = "spaces"
+
+[ui.sidebar.agents]
+rows = [["state_icon", "workspace", "tab"], ["agent", "state_text"]]
+
+[ui.sidebar.spaces]
+row_gap = 0
+rows = [["state_icon", { token = "workspace", bold = true }], ["branch", "git_status"]]
+
 [ui.toast]
 # off = disable pop-up notifications
 # herdr = show top-right in-app toasts
