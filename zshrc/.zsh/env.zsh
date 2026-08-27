@@ -8,6 +8,9 @@ export EDITOR=nvim
 export LS_EXECUTABLE=lsd # either lsd or exa
 export LANGUAGE_EXECUTABLE=mise # either asdf or mise
 
+# 1Password CLI
+export OP_BIOMETRIC_UNLOCK_ENABLED=true
+
 # Spaceship prompt config
 export SPACESHIP_CONFIG="${HOME}/spaceship.zsh"
 
@@ -17,3 +20,4 @@ export PATH="${HOME}/.local/bin:${HOME}/.amp/bin:${HOME}/.opencode/bin:${HOME}/.
 # Amp plugin env
 export PLUGINS=all
 export AGENTS_REGISTRY_ENV=local
+export AMP_CONFIG_DIR="${HOME}/.config/amp"

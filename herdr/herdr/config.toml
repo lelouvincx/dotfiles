@@ -107,7 +107,7 @@ navigate_pane_right = "l"
 
 [ui]
 # Sidebar width (auto-scaled based on workspace names, this sets the default)
-# sidebar_width = 26
+# sidebar_width = 22
 
 # Minimum sidebar width when expanded (columns)
 # sidebar_min_width = 18
@@ -154,11 +154,31 @@ accent = "cyan"
 agent_panel_sort = "spaces"
 
 [ui.sidebar.agents]
-rows = [["state_icon", "workspace", "tab"], ["agent", "state_text"]]
+row_gap = 1
+rows = [
+  [
+    "state_icon",
+    { token = "workspace", bold = true },
+    { token = "tab", bold = true },
+  ],
+  [
+    "agent",
+    "state_text",
+  ],
+]
 
 [ui.sidebar.spaces]
 row_gap = 0
-rows = [["state_icon", { token = "workspace", bold = true }], ["branch", "git_status"]]
+rows = [
+  [
+    "state_icon",
+    { token = "workspace", bold = true },
+  ],
+  [
+    "branch",
+    "git_status",
+  ],
+]
 
 [ui.toast]
 # off = disable pop-up notifications

@@ -7,6 +7,7 @@ alias zshrc="source ~/.zshrc"
 
 # File operations
 alias cat='bat --theme="Catppuccin Mocha"'
+alias c='bat --theme="Catppuccin Mocha"'
 
 # Tmux
 alias ta="TERM=screen-256color tmux attach"
