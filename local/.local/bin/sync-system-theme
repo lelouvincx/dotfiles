@@ -1,0 +1,56 @@
+#!/bin/sh
+set -eu
+
+cache_dir="$HOME/.cache/system-theme"
+alacritty_theme_dir="$HOME/.config/alacritty/themes"
+
+system_theme() {
+	if [ "$(uname -s)" != "Darwin" ]; then
+		printf 'mocha\n'
+	elif [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null || true)" = "Dark" ]; then
+		printf 'mocha\n'
+	else
+		printf 'latte\n'
+	fi
+}
+
+apply_theme() {
+	theme="$1"
+	source_file="$alacritty_theme_dir/catppuccin-$theme.toml"
+
+	mkdir -p "$cache_dir"
+	if [ -f "$source_file" ] && ! cmp -s "$source_file" "$cache_dir/alacritty.toml"; then
+		tmp_file="$(mktemp "$cache_dir/alacritty.toml.XXXXXX")"
+		trap 'rm -f "$tmp_file"' 0 1 2 15
+		cp "$source_file" "$tmp_file"
+		mv "$tmp_file" "$cache_dir/alacritty.toml"
+		trap - 0 1 2 15
+		if [ -f "$HOME/.config/alacritty/alacritty.toml" ]; then
+			touch "$HOME/.config/alacritty/alacritty.toml"
+		fi
+	fi
+	current_mode="$(cat "$cache_dir/mode" 2>/dev/null || true)"
+	if [ "$current_mode" != "$theme" ]; then
+		tmp_file="$(mktemp "$cache_dir/mode.XXXXXX")"
+		trap 'rm -f "$tmp_file"' 0 1 2 15
+		printf '%s\n' "$theme" >"$tmp_file"
+		mv "$tmp_file" "$cache_dir/mode"
+		trap - 0 1 2 15
+	fi
+}
+
+case "${1:-}" in
+"")
+	apply_theme "$(system_theme)"
+	;;
+--watch)
+	while :; do
+		apply_theme "$(system_theme)"
+		sleep 2
+	done
+	;;
+*)
+	printf 'Usage: sync-system-theme [--watch]\n' >&2
+	exit 2
+	;;
+esac

@@ -87,6 +87,43 @@ validate_selected_modules() {
 	done
 }
 
+installs_module() {
+	local requested_module="$1"
+	local module
+
+	if [ ${#selected_modules[@]} -eq 0 ]; then
+		return 0
+	fi
+	for module in "${selected_modules[@]}"; do
+		if [ "$module" = "$requested_module" ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+configure_system_theme() {
+	local sync_command="${HOME}/.local/bin/sync-system-theme"
+	local plist="${HOME}/Library/LaunchAgents/com.lelouvincx.sync-system-theme.plist"
+
+	if [ ! -x "$sync_command" ]; then
+		return
+	fi
+	if [ -d "${CONFIG_DIR}/alacritty/themes" ]; then
+		test -f "${CONFIG_DIR}/alacritty/themes/catppuccin-latte.toml"
+		test -f "${CONFIG_DIR}/alacritty/themes/catppuccin-mocha.toml"
+	fi
+	"$sync_command"
+
+	if [ "$(uname -s)" = "Darwin" ] && [ -f "$plist" ]; then
+		local domain
+		local label="com.lelouvincx.sync-system-theme"
+		domain="gui/$(id -u)"
+		launchctl bootout "${domain}/${label}" 2>/dev/null || true
+		launchctl bootstrap "$domain" "$plist"
+	fi
+}
+
 # Stow a module
 stow_module() {
 	local module_name="$1"
@@ -174,6 +211,10 @@ main() {
 			show_progress "$current" "$total" "$module"
 			stow_module "$module"
 		done
+	fi
+
+	if installs_module local || installs_module alacritty; then
+		configure_system_theme
 	fi
 
 	echo -e "\n${GREEN}${BOLD}Installation stow modules complete!${NC}"

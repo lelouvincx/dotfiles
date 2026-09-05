@@ -82,6 +82,34 @@ validate_selected_modules() {
 	done
 }
 
+uninstalls_module() {
+	local requested_module="$1"
+	local module
+
+	if [ ${#selected_modules[@]} -eq 0 ]; then
+		return 0
+	fi
+	for module in "${selected_modules[@]}"; do
+		if [ "$module" = "$requested_module" ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+stop_system_theme() {
+	if [ "$(uname -s)" = "Darwin" ]; then
+		launchctl bootout "gui/$(id -u)/com.lelouvincx.sync-system-theme" 2>/dev/null || true
+	fi
+}
+
+restart_system_theme() {
+	local plist="${HOME}/Library/LaunchAgents/com.lelouvincx.sync-system-theme.plist"
+	if [ "$(uname -s)" = "Darwin" ] && [ -f "$plist" ]; then
+		launchctl bootstrap "gui/$(id -u)" "$plist"
+	fi
+}
+
 # Unstow a module
 unstow_module() {
 	local module_name="$1"
@@ -128,6 +156,9 @@ main() {
 	echo -e "Available modules: ${YELLOW}${modules[*]}${NC}"
 	echo -e "${BOLD}Starting uninstallation of stow modules...${NC}"
 	echo -e "\n"
+	if uninstalls_module local || uninstalls_module alacritty; then
+		stop_system_theme
+	fi
 
 	# Check if specific modules were requested
 	if [ ${#selected_modules[@]} -eq 0 ]; then
@@ -141,6 +172,10 @@ main() {
 			debug "Processing module: $module"
 			unstow_module "$module"
 		done
+	fi
+
+	if uninstalls_module alacritty && ! uninstalls_module local; then
+		restart_system_theme
 	fi
 
 	echo -e "\n${GREEN}${BOLD}Uninstallation of stow modules complete!${NC}"
