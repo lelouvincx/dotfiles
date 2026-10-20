@@ -8,116 +8,19 @@ export PATH="${HOME:-/home/user}/.local/bin:$PATH"
 
 echo "[agent-skills] ensuring repository at $AGENT_SKILLS_DIR"
 
-if [ ! -d "$AGENT_SKILLS_DIR/.git" ]; then
-	rm -rf "$AGENT_SKILLS_DIR"
+if [ ! -e "$AGENT_SKILLS_DIR" ] && [ ! -L "$AGENT_SKILLS_DIR" ]; then
 	git clone "$AGENT_SKILLS_REPO" "$AGENT_SKILLS_DIR"
-else
+elif [ -e "$AGENT_SKILLS_DIR/.git" ] &&
+	[ "$(git -C "$AGENT_SKILLS_DIR" rev-parse --is-inside-work-tree)" = true ]; then
 	if git -C "$AGENT_SKILLS_DIR" diff --quiet && git -C "$AGENT_SKILLS_DIR" diff --cached --quiet; then
 		git -C "$AGENT_SKILLS_DIR" pull --ff-only
 	else
 		echo "[agent-skills] local changes detected; skipping pull"
 	fi
+else
+	echo "[agent-skills] refusing to replace existing non-checkout at $AGENT_SKILLS_DIR" >&2
+	exit 1
 fi
 
-ensure_uv() {
-	if command -v uv >/dev/null 2>&1 && command -v uvx >/dev/null 2>&1; then
-		return 0
-	fi
-
-	echo "[agent-skills] uv/uvx missing; installing uv"
-	if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-		if command -v apt-get >/dev/null 2>&1; then
-			if [ "${EUID:-$(id -u)}" -eq 0 ]; then
-				apt-get update
-				DEBIAN_FRONTEND=noninteractive apt-get install -y curl ca-certificates
-			elif command -v sudo >/dev/null 2>&1; then
-				sudo apt-get update
-				sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl ca-certificates
-			fi
-		fi
-	fi
-
-	if command -v curl >/dev/null 2>&1; then
-		curl -LsSf https://astral.sh/uv/install.sh | sh
-	elif command -v wget >/dev/null 2>&1; then
-		wget -qO- https://astral.sh/uv/install.sh | sh
-	else
-		echo "[agent-skills] curl or wget is required to install uv" >&2
-		return 1
-	fi
-
-	export PATH="${HOME:-/home/user}/.local/bin:$PATH"
-
-	if ! command -v uv >/dev/null 2>&1 || ! command -v uvx >/dev/null 2>&1; then
-		echo "[agent-skills] uv install did not add uv/uvx to PATH" >&2
-		return 1
-	fi
-}
-
-ensure_uv
-
-# Amp-managed orbs may not include rsync by default. Install it when possible
-# because sync-skills.sh uses rsync to project Amp plugins/docs into ~/.config/amp.
-if ! command -v rsync >/dev/null 2>&1; then
-	echo "[agent-skills] rsync missing; attempting to install it"
-	if command -v apt-get >/dev/null 2>&1; then
-		if [ "${EUID:-$(id -u)}" -eq 0 ]; then
-			apt-get update
-			DEBIAN_FRONTEND=noninteractive apt-get install -y rsync
-		elif command -v sudo >/dev/null 2>&1; then
-			sudo apt-get update
-			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y rsync
-		fi
-	fi
-fi
-
-# Last-resort fallback for locked-down orbs where package installation is not
-# available. sync-skills.sh only needs this subset: rsync -a --delete
-# <source-dir>/ <dest-dir>/ for Amp artifacts.
-if ! command -v rsync >/dev/null 2>&1; then
-	echo "[agent-skills] rsync install unavailable; using limited shell fallback"
-	rsync() {
-		local delete=false
-
-		while [ "$#" -gt 0 ]; do
-			case "$1" in
-				-a|--archive)
-					shift
-					;;
-				--delete)
-					delete=true
-					shift
-					;;
-				--*)
-					echo "[agent-skills] unsupported rsync option in orb fallback: $1" >&2
-					return 2
-					;;
-				-*)
-					echo "[agent-skills] unsupported rsync option in orb fallback: $1" >&2
-					return 2
-					;;
-				*)
-					break
-					;;
-			esac
-		done
-
-		if [ "$#" -ne 2 ]; then
-			echo "[agent-skills] orb rsync fallback expects source and destination" >&2
-			return 2
-		fi
-
-		local src="$1"
-		local dest="$2"
-
-		mkdir -p "$dest"
-		if [ "$delete" = true ]; then
-			find "$dest" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-		fi
-		cp -a "$src"/. "$dest"/
-	}
-	export -f rsync
-fi
-
-echo "[agent-skills] syncing default skills and Amp plugins"
-"$AGENT_SKILLS_DIR/sync-skills.sh" --remote
+exec env AGENT_SKILLS_REPO="$AGENT_SKILLS_REPO" AGENT_SKILLS_DIR="$AGENT_SKILLS_DIR" \
+	"$AGENT_SKILLS_DIR/.agents/setup" "$@"
