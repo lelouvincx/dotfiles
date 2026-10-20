@@ -1,0 +1,26 @@
+name: Orb setup
+
+on:
+  pull_request:
+    paths:
+      - '.agents/**'
+      - 'scripts/test-orb-setup.sh'
+      - '.github/workflows/orb-setup.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.agents/**'
+      - 'scripts/test-orb-setup.sh'
+      - '.github/workflows/orb-setup.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lifecycle:
+    name: Test canonical orb setup dispatch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - run: bash -n .agents/setup .agents/resume scripts/test-orb-setup.sh
+      - run: bash scripts/test-orb-setup.sh
