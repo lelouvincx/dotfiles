@@ -65,6 +65,7 @@ alias oc="opencode"
 alias a="amp"
 alias atc="amp threads continue"
 alias atr="amp threads rename"
+alias claude-wake='docker compose -f "$HOME/.local/share/amp-cliproxy/docker-compose.yml" up -d && launchctl kickstart -k "gui/$(id -u)/com.lelouvincx.amp-cliproxy-tunnel"'
 
 # Uptime
 alias u="uptime"
