@@ -4,13 +4,11 @@ on:
   pull_request:
     paths:
       - '.agents/**'
-      - 'scripts/test-orb-setup.sh'
       - '.github/workflows/orb-setup.yml'
   push:
     branches: [main]
     paths:
       - '.agents/**'
-      - 'scripts/test-orb-setup.sh'
       - '.github/workflows/orb-setup.yml'
 
 permissions:
@@ -22,5 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - run: bash -n .agents/setup .agents/resume scripts/test-orb-setup.sh
-      - run: bash scripts/test-orb-setup.sh
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: lelouvincx/agent-skills
+          ref: cf7b30f35a0f6eee29af40cebb6304c34c94ddef
+          path: .amp/in/shared-source
+      - run: bash -n .agents/setup .agents/resume .agents/sync .agents/bootstrap-agent-skills .agents/project .agents/test-lifecycle
+      - run: bash .agents/test-lifecycle
+        env:
+          AGENT_SKILLS_SOURCE: ${{ github.workspace }}/.amp/in/shared-source
