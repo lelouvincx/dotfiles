@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+stage="${1:-}"
+case "$stage" in
+  setup|resume|sync) ;;
+  *)
+    printf 'Usage: %s <setup|resume|sync>\n' "$0" >&2
+    exit 2
+    ;;
+esac
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+agent_skills_repo="${AGENT_SKILLS_REPO:-https://github.com/lelouvincx/agent-skills.git}"
+amp_checkout=/home/user/workspace/repos/agent-skills
+sibling="$(dirname "$repo_root")/agent-skills"
+if [[ -n "${AGENT_SKILLS_DIR:-}" ]]; then
+  agent_skills_dir="$AGENT_SKILLS_DIR"
+elif [[ -e "$amp_checkout" || -L "$amp_checkout" ]]; then
+  agent_skills_dir="$amp_checkout"
+elif [[ -e "$sibling" || -L "$sibling" ]]; then
+  agent_skills_dir="$sibling"
+else
+  agent_skills_dir=/home/user/workspace/agent-skills
+fi
+
+# The canonical hook owns refresh. This dispatcher only locates or clones it.
+if [[ ! -e "$agent_skills_dir" && ! -L "$agent_skills_dir" ]]; then
+  git clone "$agent_skills_repo" "$agent_skills_dir"
+fi
+
+if [[ ! -e "$agent_skills_dir/.git" ]] || \
+  ! checkout_root="$(git -C "$agent_skills_dir" rev-parse --show-toplevel)" || \
+  [[ "$(cd "$agent_skills_dir" && pwd -P)" != "$(cd "$checkout_root" && pwd -P)" ]]; then
+  printf '%s is not a Git checkout root; refusing to replace it.\n' "$agent_skills_dir" >&2
+  exit 1
+fi
+agent_skills_dir="$(cd "$agent_skills_dir" && pwd -P)"
+
+# Resume already refreshes and projects the runtime without setup installers.
+hook_stage="$stage"
+if [[ "$stage" == sync ]]; then hook_stage=resume; fi
+hook="$agent_skills_dir/.agents/$hook_stage"
+if [[ ! -x "$hook" ]]; then
+  printf 'Canonical agent-skills hook is missing or not executable: %s\n' "$hook" >&2
+  exit 1
+fi
+
+AGENT_SKILLS_REPO="$agent_skills_repo" AGENT_SKILLS_DIR="$agent_skills_dir" "$hook"
+printf '[agent-skills] runtime source: %s at %s\n' "$agent_skills_dir" \
+  "$(git -C "$agent_skills_dir" rev-parse --short HEAD)"

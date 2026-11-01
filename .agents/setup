@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-AGENT_SKILLS_REPO="${AGENT_SKILLS_REPO:-https://github.com/lelouvincx/agent-skills.git}"
-AGENT_SKILLS_DIR="${AGENT_SKILLS_DIR:-/home/user/workspace/agent-skills}"
-
-export PATH="${HOME:-/home/user}/.local/bin:$PATH"
-
-echo "[agent-skills] ensuring repository at $AGENT_SKILLS_DIR"
-
-if [ ! -e "$AGENT_SKILLS_DIR" ] && [ ! -L "$AGENT_SKILLS_DIR" ]; then
-	git clone "$AGENT_SKILLS_REPO" "$AGENT_SKILLS_DIR"
-elif [ -e "$AGENT_SKILLS_DIR/.git" ] &&
-	[ "$(git -C "$AGENT_SKILLS_DIR" rev-parse --is-inside-work-tree)" = true ]; then
-	if git -C "$AGENT_SKILLS_DIR" diff --quiet && git -C "$AGENT_SKILLS_DIR" diff --cached --quiet; then
-		git -C "$AGENT_SKILLS_DIR" pull --ff-only
-	else
-		echo "[agent-skills] local changes detected; skipping pull"
-	fi
-else
-	echo "[agent-skills] refusing to replace existing non-checkout at $AGENT_SKILLS_DIR" >&2
-	exit 1
-fi
-
-exec env AGENT_SKILLS_REPO="$AGENT_SKILLS_REPO" AGENT_SKILLS_DIR="$AGENT_SKILLS_DIR" \
-	"$AGENT_SKILLS_DIR/.agents/setup" "$@"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$repo_root/.agents/bootstrap-agent-skills" setup
+exec "$repo_root/.agents/project" setup

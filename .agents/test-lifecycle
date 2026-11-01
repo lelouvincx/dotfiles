@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+shared_source="${AGENT_SKILLS_SOURCE:-$root/../agent-skills}"
+scratch="$(mktemp -d)"
+trap 'rm -rf "$scratch"' EXIT
+export HOME="$scratch/home" AMP_CONFIG_DIR="$scratch/home/.config/amp"
+export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$scratch/gitconfig"
+export TRACE="$scratch/trace" RUNTIME="$scratch/runtime" SELECTED_SOURCE="$scratch/selected"
+export AGENT_SKILLS_NO_REFRESH=0
+unset AGENT_SKILLS_DIR MMBAK_PATH MONEY_DATABASE_PATH DBT_DUCKDB_PATH
+mkdir -p "$HOME/.local/bin" "$scratch/upstream/.agents" "$scratch/repos/consumer/.agents"
+real_git="$(command -v git)"
+export FIXTURE_GIT="$real_git"
+export PATH="$HOME/.local/bin:/usr/bin:/bin"
+
+# Only copied hooks run. No real application code, data, installers, credentials,
+# global runtime paths or /home checkouts are used by this offline fixture.
+cat > "$HOME/.local/bin/git" <<'GIT'
+#!/usr/bin/env bash
+set -euo pipefail
+case "$*" in
+  *'/home/'*'ls-files'*) exit 1 ;;
+esac
+if [[ " $* " == *' pull '* ]]; then printf 'pull\n' >> "$TRACE"; fi
+exec "$FIXTURE_GIT" "$@"
+GIT
+cat > "$HOME/.local/bin/fixture-tool" <<'TOOL'
+#!/usr/bin/env bash
+set -euo pipefail
+tool="$(basename "$0")"
+case "$tool" in
+  uv)
+    printf 'app uv %s\n' "$*" >> "$TRACE"
+    exit "${FAIL_APP:-0}"
+    ;;
+  python3)
+    if [[ "$1" == -c ]]; then
+      read -r status
+      printf '%s\n' "$status"
+    else
+      printf 'app python3 %s\n' "$*" >> "$TRACE"
+      case "$1" in
+        tools/create_dev_backup.py)
+          if [[ "$2" == --classify ]]; then
+            if [[ -f "$3" ]]; then printf 'synthetic\n'; else printf 'missing\n'; fi
+          else
+            mkdir -p "$(dirname "$2")"
+            printf 'mock synthetic backup\n' > "$2"
+          fi
+          ;;
+        tools/ledger.py) exit "${FAIL_APP:-0}" ;;
+        *) exit 90 ;;
+      esac
+    fi
+    ;;
+  uvx|op|rsync|entire|entire-agent-amp) : ;;
+  *) printf 'Forbidden installer or workstation command: %s\n' "$tool" >&2; exit 91 ;;
+esac
+TOOL
+chmod +x "$HOME/.local/bin/"*
+for tool in uv uvx python3 op rsync entire entire-agent-amp curl wget stow; do
+  ln -s fixture-tool "$HOME/.local/bin/$tool"
+done
+cp "$shared_source/.agents/setup" "$shared_source/.agents/resume" "$scratch/upstream/.agents/"
+cat > "$scratch/upstream/sync-skills.sh" <<'SYNC'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'base %s\n' "$*" >> "$TRACE"
+if [[ "${FAIL_BASE:-0}" != 0 ]]; then exit "$FAIL_BASE"; fi
+printf 'baseline\n' > "$RUNTIME"
+printf '%s\n' "$AGENT_SKILLS_DIR" > "$SELECTED_SOURCE"
+SYNC
+chmod +x "$scratch/upstream/.agents/"* "$scratch/upstream/sync-skills.sh"
+git -C "$scratch/upstream" init -q -b main
+git -C "$scratch/upstream" add .
+git -C "$scratch/upstream" -c user.name=Fixture -c user.email=fixture@example.invalid -c commit.gpgsign=false commit -qm initial
+export AGENT_SKILLS_REPO="$scratch/upstream"
+project="$scratch/repos/consumer"
+cp "$root/.agents/"{setup,resume,sync,project} "$project/.agents/"
+# Relocate just the fixed source candidates, never write the machine's /home.
+sed -e "s|/home/user/workspace/repos/agent-skills|$scratch/amp/agent-skills|g" \
+  -e "s|/home/user/workspace/agent-skills|$scratch/fallback|g" \
+  "$root/.agents/bootstrap-agent-skills" > "$project/.agents/bootstrap-agent-skills"
+mv "$project/.agents/project" "$project/.agents/project.original"
+cat > "$project/.agents/project" <<'PROJECT'
+#!/usr/bin/env bash
+set -euo pipefail
+test "$(cat "$RUNTIME")" = baseline
+printf 'extension %s\n' "$1" >> "$TRACE"
+printf 'customized\n' > "$RUNTIME"
+exec "$(dirname "$0")/project.original" "$@"
+PROJECT
+chmod +x "$project/.agents/"*
+
+run_stage() { (cd "$scratch"; "$project/.agents/$1"); }
+expect_failure() {
+  local expected="$1" result=0
+  shift
+  "$@" || result=$?
+  test "$result" = "$expected"
+}
+git clone -q "$scratch/upstream" "$scratch/repos/agent-skills"
+: > "$TRACE"
+run_stage sync
+test "$(cat "$SELECTED_SOURCE")" = "$(cd "$scratch/repos/agent-skills" && pwd -P)"
+test "$(grep -c '^pull$' "$TRACE")" = 1
+test ! -e "$scratch/fallback"
+test ! -e "$project/data"
+test ! -e "$project/.amp"
+echo 'PASS: sibling selection through public sync; canonical hook pulls exactly once'
+
+mkdir "$scratch/amp"
+git clone -q "$scratch/upstream" "$scratch/amp/agent-skills"
+run_stage sync
+test "$(cat "$SELECTED_SOURCE")" = "$(cd "$scratch/amp/agent-skills" && pwd -P)"
+echo 'PASS: existing Amp checkout takes precedence over sibling'
+
+export AGENT_SKILLS_DIR="$scratch/explicit checkout"
+for stage in setup resume sync setup resume sync; do
+  : > "$TRACE"
+  if [[ "$stage" == sync ]]; then
+    app_before="$(find "$project" -path "$project/.agents" -prune -o -print | LC_ALL=C sort)"
+    bytes_before="$(find "$project" -path "$project/.agents" -prune -o -type f -exec cksum {} \; | LC_ALL=C sort)"
+  fi
+  run_stage "$stage"
+  test "$(grep -c '^pull$' "$TRACE")" = 1
+  test "$(sed -n '2p' "$TRACE")" = "base $([[ "$stage" == setup ]] && printf -- '--remote' || true)"
+  test "$(sed -n '3p' "$TRACE")" = "extension $stage"
+  test "$(cat "$RUNTIME")" = customized
+  test "$(cat "$SELECTED_SOURCE")" = "$(cd "$AGENT_SKILLS_DIR" && pwd -P)"
+  if grep -q 'personal-finance' "$root/.agents/project"; then
+    case "$stage" in
+      setup)
+        grep -qx 'app uv sync --frozen' "$TRACE"
+        grep -qx 'app uv run --frozen dbt run --project-dir transform --profiles-dir transform' "$TRACE"
+        grep -q '^app python3 tools/ledger.py .* init$' "$TRACE"
+        ;;
+      resume)
+        if grep -q '^app uv ' "$TRACE"; then exit 1; fi
+        grep -q '^app python3 tools/ledger.py .* init$' "$TRACE"
+        ;;
+      sync) if grep -q '^app ' "$TRACE"; then exit 1; fi ;;
+    esac
+  else
+    if grep -q '^app ' "$TRACE"; then exit 1; fi
+  fi
+  if [[ "$stage" == sync ]]; then
+    test "$(find "$project" -path "$project/.agents" -prune -o -print | LC_ALL=C sort)" = "$app_before"
+    test "$(find "$project" -path "$project/.agents" -prune -o -type f -exec cksum {} \; | LC_ALL=C sort)" = "$bytes_before"
+  fi
+done
+echo 'PASS: repeated public stages select override; baseline precedes extension and app; sync has no app work'
+
+if grep -q 'personal-finance' "$root/.agents/project"; then
+  rm -rf "$project/data" "$project/.amp"
+  : > "$TRACE"
+  run_stage resume
+  test -d "$project/.amp/in/artifacts"
+  test "$(cat "$project/data/money_android.sqlite")" = 'mock synthetic backup'
+  if grep -q '^app uv ' "$TRACE"; then exit 1; fi
+  printf 'existing mock source\n' > "$project/data/money_android.sqlite"
+  printf 'existing mock backup\n' > "$project/data/MMAuto[GF260802](8-2-26-081616).mmbak"
+  for stage in setup resume; do
+    run_stage "$stage"
+    test "$(cat "$project/data/money_android.sqlite")" = 'existing mock source'
+    test "$(cat "$project/data/MMAuto[GF260802](8-2-26-081616).mmbak")" = 'existing mock backup'
+  done
+  echo 'PASS: finance resume repairs missing mock fixtures without dependencies; setup/resume preserve existing mock source and backup'
+fi
+
+# Verify the consumer accepts dirty source and delegates all refresh decisions.
+for kind in tracked staged untracked; do
+  case "$kind" in
+    tracked) printf '\n# dirty\n' >> "$AGENT_SKILLS_DIR/sync-skills.sh" ;;
+    staged) git -C "$AGENT_SKILLS_DIR" add sync-skills.sh ;;
+    untracked)
+      git -C "$AGENT_SKILLS_DIR" restore --staged sync-skills.sh
+      git -C "$AGENT_SKILLS_DIR" restore sync-skills.sh
+      printf 'untracked\n' > "$AGENT_SKILLS_DIR/sentinel"
+      ;;
+  esac
+  before="$(git -C "$AGENT_SKILLS_DIR" status --porcelain)"
+  for stage in setup resume sync; do
+    : > "$TRACE"
+    run_stage "$stage"
+    if grep -q '^pull$' "$TRACE"; then exit 1; fi
+    test "$(git -C "$AGENT_SKILLS_DIR" status --porcelain)" = "$before"
+  done
+done
+echo 'PASS: tracked, staged and untracked source stays intact without pulls for every stage'
+
+git -C "$scratch/repos/agent-skills" worktree add -q -b fixture-linked "$scratch/linked"
+git -C "$scratch/linked" branch --set-upstream-to=origin/main fixture-linked
+for stage in setup resume sync; do
+  AGENT_SKILLS_DIR="$scratch/linked" run_stage "$stage"
+  test -f "$scratch/linked/.git"
+  test "$(cat "$SELECTED_SOURCE")" = "$(cd "$scratch/linked" && pwd -P)"
+done
+echo 'PASS: linked Git worktree accepted without replacement for every stage'
+
+mkdir "$scratch/invalid" "$AGENT_SKILLS_DIR/nested"
+printf 'preserve\n' > "$scratch/invalid/sentinel"
+printf 'preserve file\n' > "$scratch/plain-file"
+ln -s "$scratch/absent" "$scratch/broken-link"
+for candidate in "$scratch/invalid" "$AGENT_SKILLS_DIR/nested" "$scratch/plain-file" "$scratch/broken-link"; do
+  for stage in setup resume sync; do
+    : > "$TRACE"
+    expect_failure 1 env AGENT_SKILLS_DIR="$candidate" "$project/.agents/$stage"
+    test ! -s "$TRACE"
+  done
+done
+test "$(cat "$scratch/invalid/sentinel")" = preserve
+test "$(cat "$scratch/plain-file")" = 'preserve file'
+test -L "$scratch/broken-link"
+echo 'PASS: malformed roots, subdirectories, files and dangling links fail closed without deletion or project work'
+
+for stage in setup resume sync; do
+  : > "$TRACE"
+  expect_failure 19 env FAIL_BASE=19 "$project/.agents/$stage"
+  if grep -Eq '^extension|^app ' "$TRACE"; then exit 1; fi
+done
+echo 'PASS: baseline failure propagates unchanged and prevents project work'
+
+if grep -q 'personal-finance' "$root/.agents/project"; then
+  for stage in setup resume; do
+    expect_failure 23 env FAIL_APP=23 "$project/.agents/$stage"
+  done
+fi
+mv "$project/.agents/project" "$project/.agents/project.wrapper"
+printf '#!/usr/bin/env bash\nexit 27\n' > "$project/.agents/project"
+chmod +x "$project/.agents/project"
+for stage in setup resume sync; do expect_failure 27 run_stage "$stage"; done
+mv "$project/.agents/project.wrapper" "$project/.agents/project"
+echo 'PASS: project extension and app failures propagate unchanged'
+
+unset AGENT_SKILLS_DIR
+mv "$scratch/amp/agent-skills" "$scratch/saved-amp"
+mv "$scratch/repos/agent-skills" "$scratch/saved-sibling"
+run_stage sync
+test "$(cat "$SELECTED_SOURCE")" = "$(cd "$scratch/fallback" && pwd -P)"
+run_stage sync
+mv "$scratch/saved-sibling" "$scratch/repos/agent-skills"
+run_stage sync
+test "$(cat "$SELECTED_SOURCE")" = "$(cd "$scratch/repos/agent-skills" && pwd -P)"
+test -d "$scratch/fallback/.git"
+echo 'PASS: missing candidates clone fallback once; existing sibling wins without removing duplicate'
+
+mv "$scratch/repos/agent-skills" "$scratch/saved-sibling"
+mkdir "$scratch/repos/agent-skills"
+printf 'preserve\n' > "$scratch/repos/agent-skills/sentinel"
+expect_failure 1 run_stage sync
+test "$(cat "$scratch/repos/agent-skills/sentinel")" = preserve
+echo 'PASS: invalid preferred sibling is an error, not fallback or replacement'
+
+export AGENT_SKILLS_DIR="$scratch/fallback"
+mv "$AGENT_SKILLS_DIR/.agents/resume" "$scratch/saved-resume"
+expect_failure 1 run_stage sync
+mv "$scratch/saved-resume" "$AGENT_SKILLS_DIR/.agents/resume"
+mv "$project/.agents/project.original" "$project/.agents/project"
+run_stage sync
+test "$(cat "$RUNTIME")" = baseline
+echo 'PASS: missing canonical hook fails closed; removing customization restores baseline'

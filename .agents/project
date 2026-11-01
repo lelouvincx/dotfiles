@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+stage="${1:-}"
+case "$stage" in
+  setup|resume|sync) ;;
+  *) printf 'Usage: %s <setup|resume|sync>\n' "$0" >&2; exit 2 ;;
+esac
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+printf '[dotfiles] project extension: %s/.agents/project (%s)\n' "$repo_root" "$stage"
+# No runtime customizations or app work. Workstation installation remains an
+# explicit, separate install.sh/Stow operation; never run it from these hooks.
